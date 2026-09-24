@@ -178,6 +178,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           letterSpacing: -0.4,
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      Consumer<UpdateService>(
+                        builder: (context, upd, _) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFBFDBFE)),
+                          ),
+                          child: Text(
+                            'v${upd.currentVersion}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AetherConstants.primaryBlue,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 3),

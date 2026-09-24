@@ -1,0 +1,30 @@
+name: smart_city_tegal
+description: "A modern Smart City IoT Dashboard for Kota Tegal using Flutter and MQTT."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # MQTT Client for real-time IoT communication
+  mqtt_client: ^10.4.0
+  # State management
+  provider: ^6.1.2
+  # Sleek modern Google Fonts
+  google_fonts: ^6.2.1
+  # Cupertino icons for modern UI details
+  cupertino_icons: ^1.0.8
+  ota_update: ^7.1.0
+  package_info_plus: ^10.2.1
+  http: ^1.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

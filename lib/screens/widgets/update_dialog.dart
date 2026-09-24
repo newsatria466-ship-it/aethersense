@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../services/update_service.dart';
 
@@ -25,7 +26,19 @@ class _UpdateDialogState extends State<UpdateDialog> {
   String _progress = '0%';
   String? _statusText;
 
-  void _startUpdate() {
+  Future<void> _startUpdate() async {
+    // 1. Cek izin instalasi aplikasi tidak dikenal (Install Unknown Apps)
+    final installPermission = await Permission.requestInstallPackages.status;
+    if (!installPermission.isGranted) {
+      final reqResult = await Permission.requestInstallPackages.request();
+      if (!reqResult.isGranted) {
+        if (!mounted) return;
+        _showPermissionAlert();
+        return;
+      }
+    }
+
+    if (!mounted) return;
     setState(() {
       _isDownloading = true;
       _statusText = 'Mengunduh file pembaruan APK...';
@@ -62,6 +75,60 @@ class _UpdateDialogState extends State<UpdateDialog> {
           );
         }
       },
+    );
+  }
+
+  void _showPermissionAlert() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.security_rounded, color: Color(0xFFE11D48)),
+            const SizedBox(width: 8),
+            Text(
+              'Izin Diperlukan',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Untuk memperbarui aplikasi secara otomatis, Anda harus mengaktifkan izin "Izinkan dari sumber ini" (Install Unknown Apps) di Pengaturan HP Anda.',
+          style: GoogleFonts.plusJakartaSans(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(color: const Color(0xFF64748B)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              openAppSettings();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Buka Pengaturan',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

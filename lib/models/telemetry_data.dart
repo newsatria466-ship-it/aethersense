@@ -18,6 +18,10 @@ class TelemetryData {
   final String floodStatus;
   final bool isFloodWarning;
   final int wifiRssiDbm;
+  final bool relay1;
+  final bool relay2;
+  final bool relay3;
+  final bool relay4;
   final DateTime receivedAt;
 
   TelemetryData({
@@ -40,6 +44,10 @@ class TelemetryData {
     required this.floodStatus,
     required this.isFloodWarning,
     required this.wifiRssiDbm,
+    this.relay1 = false,
+    this.relay2 = false,
+    this.relay3 = false,
+    this.relay4 = false,
     DateTime? receivedAt,
   }) : receivedAt = receivedAt ?? DateTime.now();
 
@@ -128,6 +136,47 @@ class TelemetryData {
     final uptime = _parseInt(json['uptime_s'] ?? json['uptime']);
     final rssi = _parseInt(json['wifi_rssi_dbm'] ?? json['rssi'], -70);
 
+    // Parse Live Relay Status (ESP32 Smart Lamp Control)
+    bool r1 = false;
+    bool r2 = false;
+    bool r3 = false;
+    bool r4 = false;
+
+    if (json.containsKey('relay1') || json.containsKey('relay_1') || json.containsKey('r1')) {
+      r1 = _parseBool(json['relay1'] ?? json['relay_1'] ?? json['r1']);
+    }
+    if (json.containsKey('relay2') || json.containsKey('relay_2') || json.containsKey('r2')) {
+      r2 = _parseBool(json['relay2'] ?? json['relay_2'] ?? json['r2']);
+    }
+    if (json.containsKey('relay3') || json.containsKey('relay_3') || json.containsKey('r3')) {
+      r3 = _parseBool(json['relay3'] ?? json['relay_3'] ?? json['r3']);
+    }
+    if (json.containsKey('relay4') || json.containsKey('relay_4') || json.containsKey('r4')) {
+      r4 = _parseBool(json['relay4'] ?? json['relay_4'] ?? json['r4']);
+    }
+
+    if (json['relays'] is Map) {
+      final rm = json['relays'] as Map;
+      if (rm.containsKey('1') || rm.containsKey(1) || rm.containsKey('relay1')) {
+        r1 = _parseBool(rm['1'] ?? rm[1] ?? rm['relay1']);
+      }
+      if (rm.containsKey('2') || rm.containsKey(2) || rm.containsKey('relay2')) {
+        r2 = _parseBool(rm['2'] ?? rm[2] ?? rm['relay2']);
+      }
+      if (rm.containsKey('3') || rm.containsKey(3) || rm.containsKey('relay3')) {
+        r3 = _parseBool(rm['3'] ?? rm[3] ?? rm['relay3']);
+      }
+      if (rm.containsKey('4') || rm.containsKey(4) || rm.containsKey('relay4')) {
+        r4 = _parseBool(rm['4'] ?? rm[4] ?? rm['relay4']);
+      }
+    } else if (json['relays'] is List) {
+      final rl = json['relays'] as List;
+      if (rl.isNotEmpty) r1 = _parseBool(rl[0]);
+      if (rl.length > 1) r2 = _parseBool(rl[1]);
+      if (rl.length > 2) r3 = _parseBool(rl[2]);
+      if (rl.length > 3) r4 = _parseBool(rl[3]);
+    }
+
     return TelemetryData(
       deviceId: devId,
       sequence: seq,
@@ -148,7 +197,65 @@ class TelemetryData {
       floodStatus: floodStat,
       isFloodWarning: floodWarn,
       wifiRssiDbm: rssi,
+      relay1: r1,
+      relay2: r2,
+      relay3: r3,
+      relay4: r4,
       receivedAt: DateTime.now(),
+    );
+  }
+
+  TelemetryData copyWith({
+    String? deviceId,
+    int? sequence,
+    int? timestamp,
+    int? uptimeSeconds,
+    double? temperatureC,
+    double? humidityPercent,
+    int? mq135Raw,
+    int? mq135AdcMv,
+    double? mq135SensorMv,
+    String? airQualityStatus,
+    bool? isGasPolluted,
+    int? rainRaw,
+    String? rainStatus,
+    bool? isRaining,
+    double? waterDistanceCm,
+    double? waterLevelCm,
+    String? floodStatus,
+    bool? isFloodWarning,
+    int? wifiRssiDbm,
+    bool? relay1,
+    bool? relay2,
+    bool? relay3,
+    bool? relay4,
+    DateTime? receivedAt,
+  }) {
+    return TelemetryData(
+      deviceId: deviceId ?? this.deviceId,
+      sequence: sequence ?? this.sequence,
+      timestamp: timestamp ?? this.timestamp,
+      uptimeSeconds: uptimeSeconds ?? this.uptimeSeconds,
+      temperatureC: temperatureC ?? this.temperatureC,
+      humidityPercent: humidityPercent ?? this.humidityPercent,
+      mq135Raw: mq135Raw ?? this.mq135Raw,
+      mq135AdcMv: mq135AdcMv ?? this.mq135AdcMv,
+      mq135SensorMv: mq135SensorMv ?? this.mq135SensorMv,
+      airQualityStatus: airQualityStatus ?? this.airQualityStatus,
+      isGasPolluted: isGasPolluted ?? this.isGasPolluted,
+      rainRaw: rainRaw ?? this.rainRaw,
+      rainStatus: rainStatus ?? this.rainStatus,
+      isRaining: isRaining ?? this.isRaining,
+      waterDistanceCm: waterDistanceCm ?? this.waterDistanceCm,
+      waterLevelCm: waterLevelCm ?? this.waterLevelCm,
+      floodStatus: floodStatus ?? this.floodStatus,
+      isFloodWarning: isFloodWarning ?? this.isFloodWarning,
+      wifiRssiDbm: wifiRssiDbm ?? this.wifiRssiDbm,
+      relay1: relay1 ?? this.relay1,
+      relay2: relay2 ?? this.relay2,
+      relay3: relay3 ?? this.relay3,
+      relay4: relay4 ?? this.relay4,
+      receivedAt: receivedAt ?? this.receivedAt,
     );
   }
 
@@ -173,6 +280,10 @@ class TelemetryData {
       'flood_status': floodStatus,
       'is_flood_warning': isFloodWarning,
       'wifi_rssi_dbm': wifiRssiDbm,
+      'relay1': relay1,
+      'relay2': relay2,
+      'relay3': relay3,
+      'relay4': relay4,
     };
   }
 }

@@ -14,6 +14,7 @@ import '../widgets/air_quality_card.dart';
 import '../widgets/rain_sensor_card.dart';
 import '../widgets/technical_info_card.dart';
 import '../widgets/smart_city_navigation.dart';
+import '../widgets/smart_lamp_section.dart';
 import 'widgets/update_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -398,104 +399,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                     const SizedBox(height: 16),
 
-                    // 2. Monitoring Sensors Section
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Flood Warning / Safe Banner
-                          FloodAlertBanner(
-                            isFloodWarning: telemetry?.isFloodWarning ?? false,
-                            floodStatus: telemetry?.floodStatus ?? 'Aman',
-                            waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Section Title
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'MONITORING LINGKUNGAN',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.0,
-                                  color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0x301E293B) : const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  controller.freshnessText,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Water Level & Flood Monitor Card
-                          FloodMonitorCard(
-                            waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
-                            waterDistanceCm: telemetry?.waterDistanceCm ?? 0.0,
-                            floodStatus: telemetry?.floodStatus ?? 'Aman',
-                            isFloodWarning: telemetry?.isFloodWarning ?? false,
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          // Air Quality Sensor Card (MQ-135)
-                          AirQualityCard(
-                            airQualityStatus: telemetry?.airQualityStatus ?? 'Normal / Baik',
-                            mq135SensorMv: telemetry?.mq135SensorMv ?? 0.0,
-                            mq135Raw: telemetry?.mq135Raw ?? 0,
-                            isGasPolluted: telemetry?.isGasPolluted ?? false,
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          // Rain Sensor Card
-                          RainSensorCard(
-                            rainStatus: telemetry?.rainStatus ?? 'Tidak Hujan',
-                            rainRaw: telemetry?.rainRaw ?? 4095,
-                            isRaining: telemetry?.isRaining ?? false,
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          // Climate Card (DHT22 Detail)
-                          ClimateCard(
-                            temperatureC: telemetry?.temperatureC ?? 0.0,
-                            humidityPercent: telemetry?.humidityPercent ?? 0.0,
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          // Technical Device Info Card
-                          TechnicalInfoCard(
-                            deviceId: telemetry?.deviceId ?? (controller.activeDeviceId ?? 'ESP32-S3'),
-                            uptimeSeconds: telemetry?.uptimeSeconds ?? 0,
-                            sequence: telemetry?.sequence ?? 0,
-                            wifiRssiDbm: telemetry?.wifiRssiDbm ?? -70,
-                          ),
-
-                          // Bottom padding for navigation clearance
-                          const SizedBox(height: 96),
-                        ],
+                    // Tab View Switcher
+                    if (_selectedNavIndex == 2)
+                      const SmartLampSection()
+                    else
+                      _buildMonitoringSection(
+                        context: context,
+                        controller: controller,
+                        telemetry: telemetry,
+                        isDark: isDark,
+                        textSecondary: textSecondary,
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -517,6 +431,218 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Section Monitoring Lingkungan (Tab 0)
+  Widget _buildMonitoringSection({
+    required BuildContext context,
+    required TelemetryController controller,
+    required dynamic telemetry,
+    required bool isDark,
+    required Color textSecondary,
+  }) {
+    final activeRelayCount = controller.activeRelayCount;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Flood Warning / Safe Banner
+          FloodAlertBanner(
+            isFloodWarning: telemetry?.isFloodWarning ?? false,
+            floodStatus: telemetry?.floodStatus ?? 'Aman',
+            waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Section Title
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'MONITORING LINGKUNGAN',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.0,
+                  color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0x301E293B) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  controller.freshnessText,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Water Level & Flood Monitor Card
+          FloodMonitorCard(
+            waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
+            waterDistanceCm: telemetry?.waterDistanceCm ?? 0.0,
+            floodStatus: telemetry?.floodStatus ?? 'Aman',
+            isFloodWarning: telemetry?.isFloodWarning ?? false,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Air Quality Sensor Card (MQ-135)
+          AirQualityCard(
+            airQualityStatus: telemetry?.airQualityStatus ?? 'Normal / Baik',
+            mq135SensorMv: telemetry?.mq135SensorMv ?? 0.0,
+            mq135Raw: telemetry?.mq135Raw ?? 0,
+            isGasPolluted: telemetry?.isGasPolluted ?? false,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Rain Sensor Card
+          RainSensorCard(
+            rainStatus: telemetry?.rainStatus ?? 'Tidak Hujan',
+            rainRaw: telemetry?.rainRaw ?? 4095,
+            isRaining: telemetry?.isRaining ?? false,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Climate Card (DHT22 Detail)
+          ClimateCard(
+            temperatureC: telemetry?.temperatureC ?? 0.0,
+            humidityPercent: telemetry?.humidityPercent ?? 0.0,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Smart Lamp Quick Access Card inside Monitoring
+          InkWell(
+            onTap: () {
+              setState(() {
+                _selectedNavIndex = 2;
+              });
+            },
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AetherConstants.surfaceDark : Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: activeRelayCount > 0
+                      ? (isDark ? const Color(0x80F59E0B) : const Color(0xFFFCD34D))
+                      : (isDark ? AetherConstants.borderDark : AetherConstants.borderLight),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: activeRelayCount > 0
+                          ? (isDark ? const Color(0x35F59E0B) : const Color(0xFFFEF3C7))
+                          : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.lightbulb_rounded,
+                      color: activeRelayCount > 0 ? const Color(0xFFF59E0B) : const Color(0xFF94A3B8),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Smart Lamp Kota Tegal',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : AetherConstants.textPrimaryLight,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: activeRelayCount > 0
+                                    ? const Color(0x3010B981)
+                                    : (isDark ? const Color(0x3064748B) : const Color(0xFFF1F5F9)),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                activeRelayCount > 0 ? '$activeRelayCount Aktif' : 'Semua Padam',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: activeRelayCount > 0
+                                      ? const Color(0xFF10B981)
+                                      : textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Kontrol 4 Sektor Penerangan Jalan & Fasilitas Publik',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Technical Device Info Card
+          TechnicalInfoCard(
+            deviceId: telemetry?.deviceId ?? (controller.activeDeviceId ?? 'ESP32-S3'),
+            uptimeSeconds: telemetry?.uptimeSeconds ?? 0,
+            sequence: telemetry?.sequence ?? 0,
+            wifiRssiDbm: telemetry?.wifiRssiDbm ?? -70,
+          ),
+
+          // Bottom padding for navigation clearance
+          const SizedBox(height: 96),
+        ],
       ),
     );
   }

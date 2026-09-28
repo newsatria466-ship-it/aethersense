@@ -250,6 +250,36 @@ class MqttService {
     _connectionStateController.add(newState);
   }
 
+  /// Publish a payload string to an MQTT topic
+  bool publish(
+    String topic,
+    String payload, {
+    MqttQos qos = MqttQos.atLeastOnce,
+    bool retain = false,
+  }) {
+    if (_client == null || _state != MqttConnectionStateStatus.connected) {
+      if (kDebugMode) {
+        print('[AetherSense][MQTT][WARN] Cannot publish, client not connected (State: $_state).');
+      }
+      return false;
+    }
+
+    try {
+      final builder = MqttClientPayloadBuilder();
+      builder.addString(payload);
+      _client!.publishMessage(topic, qos, builder.payload!, retain: retain);
+      if (kDebugMode) {
+        print('[AetherSense][MQTT] Published to [$topic]: $payload');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('[AetherSense][MQTT][ERROR] Publish failed: $e');
+      }
+      return false;
+    }
+  }
+
   /// Manual reconnect trigger from UI
   Future<void> reconnect() async {
     _isExplicitlyDisconnected = false;

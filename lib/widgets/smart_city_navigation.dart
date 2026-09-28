@@ -60,14 +60,14 @@ class SmartCityNavigation extends StatelessWidget {
             ),
           ),
 
-          // Tab 3: Smart Lamp (Coming Soon)
+          // Tab 3: Smart Lamp (Active Kontrol Sektor)
           Expanded(
             child: _buildTabItem(
               context: context,
               index: 2,
-              icon: Icons.lightbulb_outline_rounded,
+              icon: currentIndex == 2 ? Icons.lightbulb_rounded : Icons.lightbulb_outline_rounded,
               title: 'Smart Lamp',
-              subtitle: 'Segera Hadir',
+              subtitle: 'Kontrol Sektor',
               isActive: currentIndex == 2,
               isDark: isDark,
             ),
@@ -92,7 +92,7 @@ class SmartCityNavigation extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        if (index != 0) {
+        if (index == 1) {
           _showComingSoonNotice(context, title, isDark);
         } else {
           onTabSelected(index);

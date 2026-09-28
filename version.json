@@ -1,6 +1,6 @@
 {
-  "version": "1.0.2",
-  "versionCode": 3,
-  "changelog": "• Kalibrasi cerdas MQ-135: nilai ADC 621 kini berstatus Normal / Baik (mencegah false alarm)\n• Peningkatan akurasi deteksi bahaya gas\n• Badge versi aplikasi di header dashboard",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.2/app-release.apk"
+  "version": "1.0.3",
+  "versionCode": 4,
+  "changelog": "• Desain UI Hero Baru: Tegal EcoSense bernuansa malam Alun-Alun Kota Tegal & Masjid Agung\n• Kartu Glassmorphism Telemetri DHT22 & Node ESP32-S3 interaktif\n• Fitur pemilih landmark Kota Tegal (Alun-Alun, Jl. Pancasila, Masjid Agung)\n• Dark cyber smart-city visual theme dengan performa lebih mulus",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.3/app-release.apk"
 }

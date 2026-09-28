@@ -14,9 +14,9 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color(0xFF0A0F1D),
+      systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
 
@@ -34,21 +34,22 @@ class AetherSenseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UpdateService()),
       ],
       child: MaterialApp(
-        title: 'AetherSense',
+        title: 'Tegal EcoSense',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
+          brightness: Brightness.dark,
           scaffoldBackgroundColor: AetherConstants.background,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AetherConstants.primaryBlue,
+          colorScheme: const ColorScheme.dark(
+            primary: AetherConstants.cyanAccent,
             surface: AetherConstants.background,
-            brightness: Brightness.light,
+            onSurface: Colors.white,
           ),
           textTheme: GoogleFonts.plusJakartaSansTextTheme(
-            Theme.of(context).textTheme,
+            ThemeData.dark().textTheme,
           ),
           appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             scrolledUnderElevation: 0,
           ),

@@ -1,12 +1,12 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../controllers/telemetry_controller.dart';
 import '../services/update_service.dart';
 import '../utils/constants.dart';
-import '../widgets/connection_badge.dart';
-import '../widgets/empty_telemetry_view.dart';
+import '../widgets/hero_banner_section.dart';
 import '../widgets/flood_alert_banner.dart';
 import '../widgets/flood_monitor_card.dart';
 import '../widgets/climate_card.dart';
@@ -58,10 +58,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final updateService = context.read<UpdateService>();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'Memeriksa pembaruan sistem AetherSense...',
-          style: GoogleFonts.plusJakartaSans(),
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AetherConstants.cyanAccent,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Memeriksa pembaruan Tegal EcoSense...',
+              style: GoogleFonts.plusJakartaSans(color: Colors.white),
+            ),
+          ],
         ),
+        backgroundColor: const Color(0xFF1E293B),
+        behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -76,392 +91,371 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SnackBar(
           content: Text(
             'Aplikasi sudah versi terbaru (v${updateService.currentVersion})',
-            style: GoogleFonts.plusJakartaSans(),
+            style: GoogleFonts.plusJakartaSans(color: Colors.white),
           ),
-          backgroundColor: AetherConstants.statusGreenText,
+          backgroundColor: const Color(0xFF065F46),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final controller = context.watch<TelemetryController>();
-    final telemetry = controller.telemetry;
-    final hasData = controller.hasData;
-    final activeDevice = controller.activeDeviceId ?? 'Waiting...';
-
-    return Scaffold(
-      backgroundColor: AetherConstants.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () => controller.retryConnection(),
-          child: Column(
-            children: [
-              // Header & Connection Section
-              _buildAppBar(context, activeDevice, controller),
-
-              // Main Body: Empty State or Populated Responsive Dashboard
-              Expanded(
-                child: hasData && telemetry != null
-                    ? _buildResponsiveDashboard(context, telemetry, controller)
-                    : EmptyTelemetryView(
-                        connectionStatus: controller.connectionStatus,
-                        onRetry: () => controller.retryConnection(),
-                      ),
+  void _showMenuModal(BuildContext context, TelemetryController controller, UpdateService updateService) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 32),
+              decoration: BoxDecoration(
+                color: const Color(0xF00F172A),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border.all(color: Colors.white.withOpacity(0.12), width: 1),
               ),
-
-              // Bottom Smart City Navigation
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: SmartCityNavigation(
-                  currentIndex: _selectedNavIndex,
-                  onTabSelected: (index) {
-                    setState(() {
-                      _selectedNavIndex = index;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// App Bar with Device Identifier and Status Badge
-  Widget _buildAppBar(
-    BuildContext context,
-    String activeDevice,
-    TelemetryController controller,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AetherConstants.border, width: 1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Brand & Active Device Subtitle
-              Column(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Drag Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Header Row
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.cloud_sync_rounded,
-                          color: AetherConstants.primaryBlue,
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'AetherSense Dashboard',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AetherConstants.textPrimary,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Consumer<UpdateService>(
-                        builder: (context, upd, _) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFBFDBFE)),
-                          ),
-                          child: Text(
-                            'v${upd.currentVersion}',
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tegal EcoSense',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AetherConstants.primaryBlue,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Smart City IoT Platform • v${updateService.currentVersion}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: AetherConstants.cyanAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close_rounded, color: Colors.white70),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Text(
-                        'Device: ',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AetherConstants.textSecondary,
-                        ),
+
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.white.withOpacity(0.1)),
+                  const SizedBox(height: 12),
+
+                  // Menu Action 1: Cek Pembaruan
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0x3038BDF8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      Text(
-                        activeDevice,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: activeDevice == 'Waiting...'
-                              ? const Color(0xFFD97706)
-                              : AetherConstants.primaryBlue,
-                        ),
+                      child: const Icon(
+                        Icons.system_update_rounded,
+                        color: AetherConstants.cyanAccent,
+                        size: 20,
                       ),
-                    ],
+                    ),
+                    title: Text(
+                      'Periksa Pembaruan Sistem (OTA)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Unduh versi APK terbaru dari GitHub Releases',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _checkUpdateManually();
+                    },
+                  ),
+
+                  // Menu Action 2: Reconnect MQTT
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0x3010B981),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.sync_rounded,
+                        color: AetherConstants.statusGreen,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      'Hubungkan Ulang MQTT',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Broker: ${AetherConstants.brokerHost}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      controller.retryConnection();
+                    },
+                  ),
+
+                  // Menu Action 3: Pilih Perangkat Aktif
+                  if (controller.devices.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'PILIH NODE ESP32 AKTIF:',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF94A3B8),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: controller.devices.keys.map((devId) {
+                        final isSelected = devId == controller.activeDeviceId;
+                        return ChoiceChip(
+                          selected: isSelected,
+                          onSelected: (_) {
+                            controller.selectDevice(devId);
+                            Navigator.pop(ctx);
+                          },
+                          label: Text(
+                            devId,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                              color: isSelected ? Colors.black : Colors.white,
+                            ),
+                          ),
+                          selectedColor: AetherConstants.cyanAccent,
+                          backgroundColor: const Color(0x301E293B),
+                          side: BorderSide(
+                            color: isSelected ? AetherConstants.cyanAccent : Colors.white24,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+                  Text(
+                    'Pemerintah Kota Tegal • Smart City EcoSense 2026',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ],
               ),
-
-              // Manual Update Check Button
-              IconButton(
-                onPressed: _checkUpdateManually,
-                tooltip: 'Cek Pembaruan',
-                icon: const Icon(
-                  Icons.system_update_rounded,
-                  color: Color(0xFF64748B),
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Live Connection Status Indicators
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ConnectionBadge(
-                status: controller.connectionStatus,
-                isLive: !controller.isTelemetryDelayed,
-                freshnessText: controller.freshnessText,
-                onRetry: () => controller.retryConnection(),
-              ),
-
-              // Device Selector if multiple ESP32 devices found
-              if (controller.devices.length > 1)
-                _buildDeviceSelector(controller),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeviceSelector(TelemetryController controller) {
-    return PopupMenuButton<String>(
-      onSelected: (devId) => controller.selectDevice(devId),
-      tooltip: 'Pilih Perangkat',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.devices_rounded, size: 12, color: Color(0xFF475569)),
-            const SizedBox(width: 4),
-            Text(
-              '${controller.devices.length} Devices',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF334155),
-              ),
             ),
-            const Icon(Icons.arrow_drop_down, size: 14, color: Color(0xFF64748B)),
-          ],
-        ),
-      ),
-      itemBuilder: (context) {
-        return controller.devices.keys.map((id) {
-          final isSelected = id == controller.activeDeviceId;
-          return PopupMenuItem(
-            value: id,
-            child: Row(
-              children: [
-                Icon(
-                  isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  size: 16,
-                  color: isSelected ? AetherConstants.primaryBlue : Colors.grey,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  id,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList();
-      },
-    );
-  }
-
-  /// Responsive Layout: Mobile stacked vs Tablet/Desktop wide grid
-  Widget _buildResponsiveDashboard(
-    BuildContext context,
-    dynamic telemetry,
-    TelemetryController controller,
-  ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth >= 768;
-
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. HERO FLOOD ALERT (Top Priority)
-              FloodAlertBanner(
-                isFloodWarning: telemetry.isFloodWarning,
-                floodStatus: telemetry.floodStatus,
-                waterLevelCm: telemetry.waterLevelCm,
-              ),
-
-              const SizedBox(height: 18),
-
-              if (isWideScreen)
-                // Tablet / Desktop Multi-Column Grid
-                _buildWideLayout(telemetry)
-              else
-                // Mobile Stacked Layout
-                _buildMobileLayout(telemetry),
-
-              const SizedBox(height: 16),
-
-              // Technical Device & RSSI Information
-              TechnicalInfoCard(
-                deviceId: telemetry.deviceId,
-                uptimeSeconds: telemetry.uptimeSeconds,
-                sequence: telemetry.sequence,
-                wifiRssiDbm: telemetry.wifiRssiDbm,
-              ),
-
-              const SizedBox(height: 12),
-            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildMobileLayout(dynamic telemetry) {
-    return Column(
-      children: [
-        // Flood Monitor Card
-        FloodMonitorCard(
-          waterLevelCm: telemetry.waterLevelCm,
-          waterDistanceCm: telemetry.waterDistanceCm,
-          floodStatus: telemetry.floodStatus,
-          isFloodWarning: telemetry.isFloodWarning,
-        ),
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<TelemetryController>();
+    final updateService = context.watch<UpdateService>();
+    final telemetry = controller.telemetry;
+    final hasUpdate = updateService.updateInfo?.hasUpdate ?? false;
 
-        const SizedBox(height: 14),
+    return Scaffold(
+      backgroundColor: AetherConstants.background,
+      body: Stack(
+        children: [
+          // Main Scrollable Area
+          RefreshIndicator(
+            color: AetherConstants.cyanAccent,
+            backgroundColor: const Color(0xFF0F172A),
+            onRefresh: () => controller.retryConnection(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. HERO BANNER SECTION (Photo Alun-Alun Tegal, Title, Glassmorphic Cards)
+                  HeroBannerSection(
+                    telemetry: telemetry,
+                    connectionStatus: controller.connectionStatus,
+                    onCheckUpdate: _checkUpdateManually,
+                    onMenuTap: () => _showMenuModal(context, controller, updateService),
+                    onRetryConnection: () => controller.retryConnection(),
+                    hasUpdate: hasUpdate,
+                    currentVersion: updateService.currentVersion,
+                  ),
 
-        // Climate Card (DHT22)
-        ClimateCard(
-          temperatureC: telemetry.temperatureC,
-          humidityPercent: telemetry.humidityPercent,
-        ),
+                  const SizedBox(height: 16),
 
-        const SizedBox(height: 14),
+                  // 2. MAIN SENSORS CONTENT
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Flood Alert Banner (if warning or normal status)
+                        FloodAlertBanner(
+                          isFloodWarning: telemetry?.isFloodWarning ?? false,
+                          floodStatus: telemetry?.floodStatus ?? 'Aman',
+                          waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
+                        ),
 
-        // Air Quality Card (MQ-135)
-        AirQualityCard(
-          airQualityStatus: telemetry.airQualityStatus,
-          mq135SensorMv: telemetry.mq135SensorMv,
-          mq135Raw: telemetry.mq135Raw,
-          isGasPolluted: telemetry.isGasPolluted,
-        ),
+                        const SizedBox(height: 16),
 
-        const SizedBox(height: 14),
+                        // Section Heading: Pemantauan Lingkungan Realtime
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'MONITORING LINGKUNGAN',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                                color: AetherConstants.cyanAccent,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0x301E293B),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                              ),
+                              child: Text(
+                                controller.freshnessText,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
 
-        // Rain Sensor Card
-        RainSensorCard(
-          rainStatus: telemetry.rainStatus,
-          rainRaw: telemetry.rainRaw,
-          isRaining: telemetry.isRaining,
-        ),
-      ],
-    );
-  }
+                        const SizedBox(height: 12),
 
-  Widget _buildWideLayout(dynamic telemetry) {
-    return Column(
-      children: [
-        // Top Wide Row: Flood Monitor + Climate
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 5,
-              child: FloodMonitorCard(
-                waterLevelCm: telemetry.waterLevelCm,
-                waterDistanceCm: telemetry.waterDistanceCm,
-                floodStatus: telemetry.floodStatus,
-                isFloodWarning: telemetry.isFloodWarning,
+                        // Water Level & Flood Monitor Card
+                        FloodMonitorCard(
+                          waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
+                          waterDistanceCm: telemetry?.waterDistanceCm ?? 0.0,
+                          floodStatus: telemetry?.floodStatus ?? 'Aman',
+                          isFloodWarning: telemetry?.isFloodWarning ?? false,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Air Quality Sensor Card (MQ-135)
+                        AirQualityCard(
+                          airQualityStatus: telemetry?.airQualityStatus ?? 'Normal / Baik',
+                          mq135SensorMv: telemetry?.mq135SensorMv ?? 0.0,
+                          mq135Raw: telemetry?.mq135Raw ?? 0,
+                          isGasPolluted: telemetry?.isGasPolluted ?? false,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Rain Sensor Card
+                        RainSensorCard(
+                          rainStatus: telemetry?.rainStatus ?? 'Tidak Hujan',
+                          rainRaw: telemetry?.rainRaw ?? 4095,
+                          isRaining: telemetry?.isRaining ?? false,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Climate & Ambient Card (DHT22 Detail)
+                        ClimateCard(
+                          temperatureC: telemetry?.temperatureC ?? 0.0,
+                          humidityPercent: telemetry?.humidityPercent ?? 0.0,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Technical Device Info Card
+                        TechnicalInfoCard(
+                          deviceId: telemetry?.deviceId ?? (controller.activeDeviceId ?? 'ESP32-S3'),
+                          uptimeSeconds: telemetry?.uptimeSeconds ?? 0,
+                          sequence: telemetry?.sequence ?? 0,
+                          wifiRssiDbm: telemetry?.wifiRssiDbm ?? -70,
+                        ),
+
+                        // Bottom space so navigation doesn't overlap
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              flex: 5,
-              child: ClimateCard(
-                temperatureC: telemetry.temperatureC,
-                humidityPercent: telemetry.humidityPercent,
-              ),
-            ),
-          ],
-        ),
+          ),
 
-        const SizedBox(height: 14),
-
-        // Bottom Wide Row: Air Quality + Rain
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 5,
-              child: AirQualityCard(
-                airQualityStatus: telemetry.airQualityStatus,
-                mq135SensorMv: telemetry.mq135SensorMv,
-                mq135Raw: telemetry.mq135Raw,
-                isGasPolluted: telemetry.isGasPolluted,
-              ),
+          // Floating Bottom Navigation Bar
+          Positioned(
+            left: 18,
+            right: 18,
+            bottom: 16,
+            child: SmartCityNavigation(
+              currentIndex: _selectedNavIndex,
+              onTabSelected: (index) {
+                setState(() {
+                  _selectedNavIndex = index;
+                });
+              },
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              flex: 5,
-              child: RainSensorCard(
-                rainStatus: telemetry.rainStatus,
-                rainRaw: telemetry.rainRaw,
-                isRaining: telemetry.isRaining,
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

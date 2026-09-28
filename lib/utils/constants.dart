@@ -11,37 +11,52 @@ class AetherConstants {
   static const String telemetryTopic = 'aethersense/+/telemetry';
   static const String statusTopic = 'aethersense/+/status';
 
-  // App Theme Colors (Apple / Linear / Modern IoT SaaS)
-  static const Color background = Color(0xFF0A0F1D); // Deep dark smart city
-  static const Color backgroundLight = Color(0xFFF8FAFC);
-  static const Color surface = Color(0xFF111827);
-  static const Color surfaceGlass = Color(0x551E293B);
-  static const Color border = Color(0xFF1E293B);
-  static const Color glassBorder = Color(0x3538BDF8);
-  static const Color textPrimary = Color(0xFFF8FAFC); // Crisp white
-  static const Color textSecondary = Color(0xFF94A3B8); // Slate 400
-  static const Color textMuted = Color(0xFF64748B); // Slate 500
+  // Light Mode Colors (Clean, bright, modern)
+  static const Color bgLight = Color(0xFFF8FAFC);
+  static const Color surfaceLight = Colors.white;
+  static const Color borderLight = Color(0xFFE2E8F0);
+  static const Color textPrimaryLight = Color(0xFF0F172A);
+  static const Color textSecondaryLight = Color(0xFF64748B);
+  static const Color textMutedLight = Color(0xFF94A3B8);
 
-  // Brand Accents & Neon
-  static const Color cyanAccent = Color(0xFF38BDF8); // Electric sky cyan
-  static const Color neonTeal = Color(0xFF06B6D4);
+  // Backward-compatible aliases
+  static const Color textPrimary = textPrimaryLight;
+  static const Color textSecondary = textSecondaryLight;
+
+  // Dark Mode Colors (Clean dark slate, readable)
+  static const Color bgDark = Color(0xFF0F172A);
+  static const Color surfaceDark = Color(0xFF1E293B);
+  static const Color borderDark = Color(0xFF334155);
+  static const Color textPrimaryDark = Color(0xFFF8FAFC);
+  static const Color textSecondaryDark = Color(0xFF94A3B8);
+  static const Color textMutedDark = Color(0xFF64748B);
+
+  // Brand Accent
   static const Color primaryBlue = Color(0xFF2563EB); // Royal Blue
-  static const Color primaryIndigo = Color(0xFF4F46E5);
+  static const Color cyanAccent = Color(0xFF0284C7); // Clean Sky Blue
+  static const Color accentIndigo = Color(0xFF4F46E5);
 
   // Status Colors
   static const Color statusGreen = Color(0xFF10B981);
-  static const Color statusGreenBg = Color(0xFF064E3B);
-  static const Color statusGreenText = Color(0xFF34D399);
+  static const Color statusGreenBg = Color(0xFFECFDF5);
+  static const Color statusGreenText = Color(0xFF065F46);
 
   static const Color statusYellow = Color(0xFFF59E0B);
-  static const Color statusYellowBg = Color(0xFF78350F);
-  static const Color statusYellowText = Color(0xFFFBBF24);
+  static const Color statusYellowBg = Color(0xFFFFFBEB);
+  static const Color statusYellowText = Color(0xFF92400E);
 
   static const Color statusOrange = Color(0xFFF97316);
-  static const Color statusOrangeBg = Color(0xFF7C2D12);
-  static const Color statusOrangeText = Color(0xFFFB923C);
+  static const Color statusOrangeBg = Color(0xFFFFEDD5);
+  static const Color statusOrangeText = Color(0xFF9A3412);
 
   static const Color statusRed = Color(0xFFEF4444);
-  static const Color statusRedBg = Color(0xFF7F1D1D);
-  static const Color statusRedText = Color(0xFFF87171);
+  static const Color statusRedBg = Color(0xFFFEF2F2);
+  static const Color statusRedText = Color(0xFF991B1B);
+
+  // Dynamic getters
+  static Color getBackground(bool isDark) => isDark ? bgDark : bgLight;
+  static Color getSurface(bool isDark) => isDark ? surfaceDark : surfaceLight;
+  static Color getBorder(bool isDark) => isDark ? borderDark : borderLight;
+  static Color getTextPrimary(bool isDark) => isDark ? textPrimaryDark : textPrimaryLight;
+  static Color getTextSecondary(bool isDark) => isDark ? textSecondaryDark : textSecondaryLight;
 }

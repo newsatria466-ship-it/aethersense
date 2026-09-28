@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
@@ -15,67 +14,65 @@ class SmartCityNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0x750F172A),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.12),
-              width: 1,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final navBg = isDark ? AetherConstants.surfaceDark : Colors.white;
+    final borderColor = isDark ? AetherConstants.borderDark : AetherConstants.borderLight;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: navBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Row(
+        children: [
+          // Tab 1: EcoSense / Telemetry (Active)
+          Expanded(
+            child: _buildTabItem(
+              context: context,
+              index: 0,
+              icon: Icons.radar_rounded,
+              title: 'EcoSense',
+              subtitle: 'Live IoT',
+              isActive: currentIndex == 0,
+              isDark: isDark,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.35),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            children: [
-              // Tab 1: EcoSense / Telemetry (Active)
-              Expanded(
-                child: _buildTabItem(
-                  context: context,
-                  index: 0,
-                  icon: Icons.radar_rounded,
-                  title: 'EcoSense',
-                  subtitle: 'Live IoT',
-                  isActive: currentIndex == 0,
-                ),
-              ),
 
-              // Tab 2: Smart Parking (Coming Soon)
-              Expanded(
-                child: _buildTabItem(
-                  context: context,
-                  index: 1,
-                  icon: Icons.local_parking_rounded,
-                  title: 'Smart Parking',
-                  subtitle: 'Segera Hadir',
-                  isActive: currentIndex == 1,
-                ),
-              ),
-
-              // Tab 3: Smart Lamp (Coming Soon)
-              Expanded(
-                child: _buildTabItem(
-                  context: context,
-                  index: 2,
-                  icon: Icons.lightbulb_outline_rounded,
-                  title: 'Smart Lamp',
-                  subtitle: 'Segera Hadir',
-                  isActive: currentIndex == 2,
-                ),
-              ),
-            ],
+          // Tab 2: Smart Parking (Coming Soon)
+          Expanded(
+            child: _buildTabItem(
+              context: context,
+              index: 1,
+              icon: Icons.local_parking_rounded,
+              title: 'Smart Parking',
+              subtitle: 'Segera Hadir',
+              isActive: currentIndex == 1,
+              isDark: isDark,
+            ),
           ),
-        ),
+
+          // Tab 3: Smart Lamp (Coming Soon)
+          Expanded(
+            child: _buildTabItem(
+              context: context,
+              index: 2,
+              icon: Icons.lightbulb_outline_rounded,
+              title: 'Smart Lamp',
+              subtitle: 'Segera Hadir',
+              isActive: currentIndex == 2,
+              isDark: isDark,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -87,25 +84,27 @@ class SmartCityNavigation extends StatelessWidget {
     required String title,
     required String subtitle,
     required bool isActive,
+    required bool isDark,
   }) {
+    final activeBg = isDark ? const Color(0x3538BDF8) : const Color(0xFFEFF6FF);
+    final activeColor = isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue;
+    final inactiveColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return InkWell(
       onTap: () {
         if (index != 0) {
-          _showComingSoonNotice(context, title);
+          _showComingSoonNotice(context, title, isDark);
         } else {
           onTabSelected(index);
         }
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0x3538BDF8) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: isActive
-              ? Border.all(color: AetherConstants.cyanAccent.withOpacity(0.4), width: 1)
-              : null,
+          color: isActive ? activeBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -113,9 +112,7 @@ class SmartCityNavigation extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isActive
-                  ? AetherConstants.cyanAccent
-                  : const Color(0xFF64748B),
+              color: isActive ? activeColor : inactiveColor,
             ),
             const SizedBox(height: 3),
             Text(
@@ -123,9 +120,7 @@ class SmartCityNavigation extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                color: isActive
-                    ? Colors.white
-                    : const Color(0xFF94A3B8),
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
             const SizedBox(height: 1),
@@ -134,9 +129,7 @@ class SmartCityNavigation extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 9,
                 fontWeight: FontWeight.w500,
-                color: isActive
-                    ? AetherConstants.cyanAccent
-                    : const Color(0xFF64748B),
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
           ],
@@ -145,14 +138,14 @@ class SmartCityNavigation extends StatelessWidget {
     );
   }
 
-  void _showComingSoonNotice(BuildContext context, String moduleName) {
+  void _showComingSoonNotice(BuildContext context, String moduleName, bool isDark) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.info_outline_rounded,
-                color: AetherConstants.cyanAccent, size: 18),
+            Icon(Icons.info_outline_rounded,
+                color: isDark ? AetherConstants.cyanAccent : Colors.white, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(

@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../controllers/telemetry_controller.dart';
+import '../controllers/theme_controller.dart';
 import '../services/update_service.dart';
 import '../utils/constants.dart';
 import '../widgets/hero_banner_section.dart';
@@ -56,16 +56,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _checkUpdateManually() async {
     final updateService = context.read<UpdateService>();
+    final isDark = context.read<ThemeController>().isDarkMode;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const SizedBox(
+            SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AetherConstants.cyanAccent,
+                color: isDark ? AetherConstants.cyanAccent : Colors.white,
               ),
             ),
             const SizedBox(width: 12),
@@ -100,202 +102,248 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _showMenuModal(BuildContext context, TelemetryController controller, UpdateService updateService) {
+  void _showMenuModal(
+    BuildContext context,
+    TelemetryController controller,
+    UpdateService updateService,
+    ThemeController themeController,
+  ) {
+    final isDark = themeController.isDarkMode;
+    final modalBg = isDark ? AetherConstants.surfaceDark : Colors.white;
+    final textPrimary = isDark ? Colors.white : AetherConstants.textPrimaryLight;
+    final textSecondary = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
+      backgroundColor: modalBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 32),
-              decoration: BoxDecoration(
-                color: const Color(0xF00F172A),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                border: Border.all(color: Colors.white.withOpacity(0.12), width: 1),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Drag Handle
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 18),
+                ),
+              ),
+              const SizedBox(height: 16),
 
-                  // Header Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Header Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tegal EcoSense',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Smart City IoT Platform • v${updateService.currentVersion}',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              color: AetherConstants.cyanAccent,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Tegal EcoSense',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: textPrimary,
+                        ),
                       ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Platform IoT Smart City • v${updateService.currentVersion}',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 16),
-                  Divider(color: Colors.white.withOpacity(0.1)),
-                  const SizedBox(height: 12),
-
-                  // Menu Action 1: Cek Pembaruan
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0x3038BDF8),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.system_update_rounded,
-                        color: AetherConstants.cyanAccent,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      'Periksa Pembaruan Sistem (OTA)',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Unduh versi APK terbaru dari GitHub Releases',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _checkUpdateManually();
-                    },
-                  ),
-
-                  // Menu Action 2: Reconnect MQTT
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0x3010B981),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.sync_rounded,
-                        color: AetherConstants.statusGreen,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      'Hubungkan Ulang MQTT',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Broker: ${AetherConstants.brokerHost}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      controller.retryConnection();
-                    },
-                  ),
-
-                  // Menu Action 3: Pilih Perangkat Aktif
-                  if (controller.devices.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'PILIH NODE ESP32 AKTIF:',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF94A3B8),
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: controller.devices.keys.map((devId) {
-                        final isSelected = devId == controller.activeDeviceId;
-                        return ChoiceChip(
-                          selected: isSelected,
-                          onSelected: (_) {
-                            controller.selectDevice(devId);
-                            Navigator.pop(ctx);
-                          },
-                          label: Text(
-                            devId,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                              color: isSelected ? Colors.black : Colors.white,
-                            ),
-                          ),
-                          selectedColor: AetherConstants.cyanAccent,
-                          backgroundColor: const Color(0x301E293B),
-                          side: BorderSide(
-                            color: isSelected ? AetherConstants.cyanAccent : Colors.white24,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-
-                  const SizedBox(height: 20),
-                  Text(
-                    'Pemerintah Kota Tegal • Smart City EcoSense 2026',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      color: const Color(0xFF64748B),
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: Icon(Icons.close_rounded, color: textSecondary),
                   ),
                 ],
               ),
-            ),
+
+              const SizedBox(height: 14),
+              Divider(
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
+              ),
+              const SizedBox(height: 8),
+
+              // Menu Item: Mode Tema (Terang / Gelap)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0x30FBBF24) : const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+                    color: isDark ? const Color(0xFFFBBF24) : AetherConstants.primaryBlue,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  isDark ? 'Mode Tampilan: Gelap' : 'Mode Tampilan: Terang',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  isDark ? 'Ketuk untuk beralih ke Mode Terang' : 'Ketuk untuk beralih ke Mode Gelap',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: textSecondary,
+                  ),
+                ),
+                trailing: Switch(
+                  value: isDark,
+                  onChanged: (val) {
+                    themeController.toggleTheme();
+                    Navigator.pop(ctx);
+                  },
+                  activeTrackColor: AetherConstants.cyanAccent,
+                ),
+                onTap: () {
+                  themeController.toggleTheme();
+                  Navigator.pop(ctx);
+                },
+              ),
+
+              // Menu Item: Cek Pembaruan
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0x3038BDF8) : const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.system_update_rounded,
+                    color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Periksa Pembaruan Sistem (OTA)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Unduh pembaruan APK langsung dari GitHub',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: textSecondary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _checkUpdateManually();
+                },
+              ),
+
+              // Menu Item: Hubungkan Ulang MQTT
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: const Color(0x2010B981),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.sync_rounded,
+                    color: AetherConstants.statusGreen,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Hubungkan Ulang MQTT',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Broker: ${AetherConstants.brokerHost}',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: textSecondary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  controller.retryConnection();
+                },
+              ),
+
+              // Pilih Perangkat jika ada lebih dari 1
+              if (controller.devices.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'PILIH NODE ESP32:',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: textSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: controller.devices.keys.map((devId) {
+                    final isSelected = devId == controller.activeDeviceId;
+                    final activeColor = isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue;
+
+                    return ChoiceChip(
+                      selected: isSelected,
+                      onSelected: (_) {
+                        controller.selectDevice(devId);
+                        Navigator.pop(ctx);
+                      },
+                      label: Text(
+                        devId,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                          color: isSelected ? Colors.white : textPrimary,
+                        ),
+                      ),
+                      selectedColor: activeColor,
+                      backgroundColor: isDark ? const Color(0x301E293B) : const Color(0xFFF1F5F9),
+                    );
+                  }).toList(),
+                ),
+              ],
+
+              const SizedBox(height: 18),
+              Text(
+                'Pemerintah Kota Tegal • Smart City EcoSense',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  color: textSecondary,
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -304,157 +352,171 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = context.watch<ThemeController>();
+    final isDark = themeController.isDarkMode;
+
     final controller = context.watch<TelemetryController>();
     final updateService = context.watch<UpdateService>();
     final telemetry = controller.telemetry;
     final hasUpdate = updateService.updateInfo?.hasUpdate ?? false;
 
+    final scaffoldBg = isDark ? AetherConstants.bgDark : AetherConstants.bgLight;
+    final textSecondary = isDark ? AetherConstants.textSecondaryDark : AetherConstants.textSecondaryLight;
+
     return Scaffold(
-      backgroundColor: AetherConstants.background,
-      body: Stack(
-        children: [
-          // Main Scrollable Area
-          RefreshIndicator(
-            color: AetherConstants.cyanAccent,
-            backgroundColor: const Color(0xFF0F172A),
-            onRefresh: () => controller.retryConnection(),
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. HERO BANNER SECTION (Photo Alun-Alun Tegal, Title, Glassmorphic Cards)
-                  HeroBannerSection(
-                    telemetry: telemetry,
-                    connectionStatus: controller.connectionStatus,
-                    onCheckUpdate: _checkUpdateManually,
-                    onMenuTap: () => _showMenuModal(context, controller, updateService),
-                    onRetryConnection: () => controller.retryConnection(),
-                    hasUpdate: hasUpdate,
-                    currentVersion: updateService.currentVersion,
-                  ),
+      backgroundColor: scaffoldBg,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Main Scrollable Dashboard Content
+            RefreshIndicator(
+              color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
+              backgroundColor: isDark ? AetherConstants.surfaceDark : Colors.white,
+              onRefresh: () => controller.retryConnection(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Clean Hero Banner Section (Header, Alun-Alun Tegal photo, Metric overview, Theme Toggle)
+                    HeroBannerSection(
+                      telemetry: telemetry,
+                      connectionStatus: controller.connectionStatus,
+                      onCheckUpdate: _checkUpdateManually,
+                      onToggleTheme: () => themeController.toggleTheme(),
+                      onMenuTap: () => _showMenuModal(
+                        context,
+                        controller,
+                        updateService,
+                        themeController,
+                      ),
+                      onRetryConnection: () => controller.retryConnection(),
+                      isDarkMode: isDark,
+                      hasUpdate: hasUpdate,
+                      currentVersion: updateService.currentVersion,
+                    ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // 2. MAIN SENSORS CONTENT
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Flood Alert Banner (if warning or normal status)
-                        FloodAlertBanner(
-                          isFloodWarning: telemetry?.isFloodWarning ?? false,
-                          floodStatus: telemetry?.floodStatus ?? 'Aman',
-                          waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
-                        ),
+                    // 2. Monitoring Sensors Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Flood Warning / Safe Banner
+                          FloodAlertBanner(
+                            isFloodWarning: telemetry?.isFloodWarning ?? false,
+                            floodStatus: telemetry?.floodStatus ?? 'Aman',
+                            waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
+                          ),
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // Section Heading: Pemantauan Lingkungan Realtime
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'MONITORING LINGKUNGAN',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.2,
-                                color: AetherConstants.cyanAccent,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0x301E293B),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.white.withOpacity(0.08)),
-                              ),
-                              child: Text(
-                                controller.freshnessText,
+                          // Section Title
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'MONITORING LINGKUNGAN',
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF94A3B8),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.0,
+                                  color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0x301E293B) : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  controller.freshnessText,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
 
-                        const SizedBox(height: 12),
+                          const SizedBox(height: 12),
 
-                        // Water Level & Flood Monitor Card
-                        FloodMonitorCard(
-                          waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
-                          waterDistanceCm: telemetry?.waterDistanceCm ?? 0.0,
-                          floodStatus: telemetry?.floodStatus ?? 'Aman',
-                          isFloodWarning: telemetry?.isFloodWarning ?? false,
-                        ),
+                          // Water Level & Flood Monitor Card
+                          FloodMonitorCard(
+                            waterLevelCm: telemetry?.waterLevelCm ?? 0.0,
+                            waterDistanceCm: telemetry?.waterDistanceCm ?? 0.0,
+                            floodStatus: telemetry?.floodStatus ?? 'Aman',
+                            isFloodWarning: telemetry?.isFloodWarning ?? false,
+                          ),
 
-                        const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                        // Air Quality Sensor Card (MQ-135)
-                        AirQualityCard(
-                          airQualityStatus: telemetry?.airQualityStatus ?? 'Normal / Baik',
-                          mq135SensorMv: telemetry?.mq135SensorMv ?? 0.0,
-                          mq135Raw: telemetry?.mq135Raw ?? 0,
-                          isGasPolluted: telemetry?.isGasPolluted ?? false,
-                        ),
+                          // Air Quality Sensor Card (MQ-135)
+                          AirQualityCard(
+                            airQualityStatus: telemetry?.airQualityStatus ?? 'Normal / Baik',
+                            mq135SensorMv: telemetry?.mq135SensorMv ?? 0.0,
+                            mq135Raw: telemetry?.mq135Raw ?? 0,
+                            isGasPolluted: telemetry?.isGasPolluted ?? false,
+                          ),
 
-                        const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                        // Rain Sensor Card
-                        RainSensorCard(
-                          rainStatus: telemetry?.rainStatus ?? 'Tidak Hujan',
-                          rainRaw: telemetry?.rainRaw ?? 4095,
-                          isRaining: telemetry?.isRaining ?? false,
-                        ),
+                          // Rain Sensor Card
+                          RainSensorCard(
+                            rainStatus: telemetry?.rainStatus ?? 'Tidak Hujan',
+                            rainRaw: telemetry?.rainRaw ?? 4095,
+                            isRaining: telemetry?.isRaining ?? false,
+                          ),
 
-                        const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                        // Climate & Ambient Card (DHT22 Detail)
-                        ClimateCard(
-                          temperatureC: telemetry?.temperatureC ?? 0.0,
-                          humidityPercent: telemetry?.humidityPercent ?? 0.0,
-                        ),
+                          // Climate Card (DHT22 Detail)
+                          ClimateCard(
+                            temperatureC: telemetry?.temperatureC ?? 0.0,
+                            humidityPercent: telemetry?.humidityPercent ?? 0.0,
+                          ),
 
-                        const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                        // Technical Device Info Card
-                        TechnicalInfoCard(
-                          deviceId: telemetry?.deviceId ?? (controller.activeDeviceId ?? 'ESP32-S3'),
-                          uptimeSeconds: telemetry?.uptimeSeconds ?? 0,
-                          sequence: telemetry?.sequence ?? 0,
-                          wifiRssiDbm: telemetry?.wifiRssiDbm ?? -70,
-                        ),
+                          // Technical Device Info Card
+                          TechnicalInfoCard(
+                            deviceId: telemetry?.deviceId ?? (controller.activeDeviceId ?? 'ESP32-S3'),
+                            uptimeSeconds: telemetry?.uptimeSeconds ?? 0,
+                            sequence: telemetry?.sequence ?? 0,
+                            wifiRssiDbm: telemetry?.wifiRssiDbm ?? -70,
+                          ),
 
-                        // Bottom space so navigation doesn't overlap
-                        const SizedBox(height: 100),
-                      ],
+                          // Bottom padding for navigation clearance
+                          const SizedBox(height: 96),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Floating Bottom Navigation Bar
-          Positioned(
-            left: 18,
-            right: 18,
-            bottom: 16,
-            child: SmartCityNavigation(
-              currentIndex: _selectedNavIndex,
-              onTabSelected: (index) {
-                setState(() {
-                  _selectedNavIndex = index;
-                });
-              },
+            // Bottom Navigation Bar
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 14,
+              child: SmartCityNavigation(
+                currentIndex: _selectedNavIndex,
+                onTabSelected: (index) {
+                  setState(() {
+                    _selectedNavIndex = index;
+                  });
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

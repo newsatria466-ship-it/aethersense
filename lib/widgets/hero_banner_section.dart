@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/telemetry_data.dart';
 import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
-import '../utils/formatters.dart';
+import 'overview_carousel_card.dart';
 
 class HeroBannerSection extends StatefulWidget {
   final TelemetryData? telemetry;
@@ -369,50 +369,10 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
 
         const SizedBox(height: 14),
 
-        // 4. Clean Quick Overview Cards (Kelembaban & Suhu, Node Info)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Row(
-            children: [
-              // Overview Card 1: DHT22 Kelembaban & Suhu
-              Expanded(
-                child: _buildSimpleMetricCard(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.water_drop_outlined,
-                  iconColor: const Color(0xFF0284C7),
-                  iconBg: isDark ? const Color(0x2538BDF8) : const Color(0xFFE0F2FE),
-                  label: 'Kelembaban Udara',
-                  value: widget.telemetry != null
-                      ? '${widget.telemetry!.humidityPercent.toStringAsFixed(1)}%'
-                      : '--.-%',
-                  subtitle: widget.telemetry != null
-                      ? 'Suhu: ${widget.telemetry!.temperatureC.toStringAsFixed(1)}°C'
-                      : 'Uap air relatif',
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Overview Card 2: ESP32-S3 Node Status
-              Expanded(
-                child: _buildSimpleMetricCard(
-                  context: context,
-                  isDark: isDark,
-                  icon: Icons.memory_rounded,
-                  iconColor: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
-                  iconBg: isDark ? const Color(0x2538BDF8) : const Color(0xFFEFF6FF),
-                  label: widget.telemetry?.deviceId ?? 'ESP32-S3 Node',
-                  value: widget.telemetry != null
-                      ? '${widget.telemetry!.wifiRssiDbm} dBm'
-                      : '-- dBm',
-                  subtitle: widget.telemetry != null
-                      ? 'Up: ${AetherFormatters.formatUptime(widget.telemetry!.uptimeSeconds)}'
-                      : 'Status sistem',
-                ),
-              ),
-            ],
-          ),
+        // 4. Interactive Auto-Sliding Carousel Card (Banjir, Lampu, Iklim, IoT)
+        OverviewCarouselCard(
+          telemetry: widget.telemetry,
+          isDark: isDark,
         ),
       ],
     );
@@ -455,86 +415,6 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
     );
   }
 
-  Widget _buildSimpleMetricCard({
-    required BuildContext context,
-    required bool isDark,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required String label,
-    required String value,
-    required String subtitle,
-  }) {
-    final cardBg = isDark ? AetherConstants.surfaceDark : Colors.white;
-    final borderColor = isDark ? AetherConstants.borderDark : AetherConstants.borderLight;
-    final textPrimary = isDark ? AetherConstants.textPrimaryDark : AetherConstants.textPrimaryLight;
-    final textSecondary = isDark ? AetherConstants.textSecondaryDark : AetherConstants.textSecondaryLight;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.025),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: iconColor, size: 16),
-              ),
-              Flexible(
-                child: Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showLandmarkSelector(BuildContext context) {
     final isDark = widget.isDarkMode;

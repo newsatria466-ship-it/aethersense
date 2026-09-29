@@ -1,6 +1,6 @@
 {
-  "version": "1.0.6",
-  "versionCode": 7,
-  "changelog": "• Otomasi Penerangan Jalan Smart Lamp berbasis Sensor Ambien LDR (GPIO 09)\n• Pilihan Mode Operasi: Otomatis (LDR) vs Manual (Operator) tersinkronisasi dua arah\n• Status kondisi intensitas cahaya (Terang/Gelap & Raw ADC) real-time\n• Switch kontrol manual otomatis beralih ke mode manual untuk keamanan operasi\n• Kontrol Master dan 4 Sektor Relay responsif dengan optimistic update",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.6/app-release.apk"
+  "version": "1.0.7",
+  "versionCode": 8,
+  "changelog": "• Interactive Auto-Sliding Carousel Card (Geser otomatis 4s & Swipe manual)\n• 4 Halaman Slide: Deteksi Ketinggian Air & Banjir, Penerangan Sektor & Ambien LDR, Iklim & Suhu Lingkungan, serta Status Perangkat IoT\n• Animated page dots indicator modern selaras tema Tegal EcoSense\n• Tata letak presisi dan responsif tepat di bawah chip landmark",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.7/app-release.apk"
 }

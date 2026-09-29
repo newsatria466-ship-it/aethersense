@@ -611,7 +611,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Kontrol 4 Sektor Penerangan Jalan & Fasilitas Publik',
+                          '${controller.isAutoMode ? "Otomatis (LDR)" : "Manual (Operator)"} • Ambien: ${controller.ambientLight} (${controller.ldrRaw} ADC)',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             color: textSecondary,

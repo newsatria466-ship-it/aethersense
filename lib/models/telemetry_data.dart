@@ -18,6 +18,10 @@ class TelemetryData {
   final String floodStatus;
   final bool isFloodWarning;
   final int wifiRssiDbm;
+  final int ldrRaw;
+  final String ambientLight;
+  final bool isDark;
+  final String lightingMode;
   final bool relay1;
   final bool relay2;
   final bool relay3;
@@ -44,6 +48,10 @@ class TelemetryData {
     required this.floodStatus,
     required this.isFloodWarning,
     required this.wifiRssiDbm,
+    this.ldrRaw = 0,
+    this.ambientLight = 'Terang',
+    this.isDark = false,
+    this.lightingMode = 'auto',
     this.relay1 = false,
     this.relay2 = false,
     this.relay3 = false,
@@ -136,6 +144,37 @@ class TelemetryData {
     final uptime = _parseInt(json['uptime_s'] ?? json['uptime']);
     final rssi = _parseInt(json['wifi_rssi_dbm'] ?? json['rssi'], -70);
 
+    // Parse Ambient Light & LDR (GPIO 9) & Mode
+    final ldrVal = _parseInt(json['ldr_raw'] ?? json['ldr'] ?? json['ldr_value']);
+
+    bool darkVal = false;
+    if (json.containsKey('is_dark')) {
+      darkVal = _parseBool(json['is_dark']);
+    } else if (ldrVal > 0) {
+      darkVal = ldrVal > 3000;
+    }
+
+    String ambLight = json['ambient_light']?.toString().trim() ?? '';
+    if (ambLight.isEmpty) {
+      ambLight = darkVal ? 'Gelap' : 'Terang';
+    } else {
+      final lower = ambLight.toLowerCase();
+      if (lower.contains('gelap') || lower.contains('dark')) {
+        ambLight = 'Gelap';
+        darkVal = true;
+      } else if (lower.contains('terang') || lower.contains('light') || lower.contains('bright')) {
+        ambLight = 'Terang';
+        darkVal = false;
+      }
+    }
+
+    String lightMode = json['lighting_mode']?.toString().toLowerCase().trim() ??
+        json['mode']?.toString().toLowerCase().trim() ??
+        'auto';
+    if (lightMode != 'auto' && lightMode != 'manual') {
+      lightMode = 'auto';
+    }
+
     // Parse Live Relay Status (ESP32 Smart Lamp Control)
     bool r1 = false;
     bool r2 = false;
@@ -197,6 +236,10 @@ class TelemetryData {
       floodStatus: floodStat,
       isFloodWarning: floodWarn,
       wifiRssiDbm: rssi,
+      ldrRaw: ldrVal,
+      ambientLight: ambLight,
+      isDark: darkVal,
+      lightingMode: lightMode,
       relay1: r1,
       relay2: r2,
       relay3: r3,
@@ -225,6 +268,10 @@ class TelemetryData {
     String? floodStatus,
     bool? isFloodWarning,
     int? wifiRssiDbm,
+    int? ldrRaw,
+    String? ambientLight,
+    bool? isDark,
+    String? lightingMode,
     bool? relay1,
     bool? relay2,
     bool? relay3,
@@ -251,6 +298,10 @@ class TelemetryData {
       floodStatus: floodStatus ?? this.floodStatus,
       isFloodWarning: isFloodWarning ?? this.isFloodWarning,
       wifiRssiDbm: wifiRssiDbm ?? this.wifiRssiDbm,
+      ldrRaw: ldrRaw ?? this.ldrRaw,
+      ambientLight: ambientLight ?? this.ambientLight,
+      isDark: isDark ?? this.isDark,
+      lightingMode: lightingMode ?? this.lightingMode,
       relay1: relay1 ?? this.relay1,
       relay2: relay2 ?? this.relay2,
       relay3: relay3 ?? this.relay3,
@@ -280,6 +331,10 @@ class TelemetryData {
       'flood_status': floodStatus,
       'is_flood_warning': isFloodWarning,
       'wifi_rssi_dbm': wifiRssiDbm,
+      'ldr_raw': ldrRaw,
+      'ambient_light': ambientLight,
+      'is_dark': isDark,
+      'lighting_mode': lightingMode,
       'relay1': relay1,
       'relay2': relay2,
       'relay3': relay3,

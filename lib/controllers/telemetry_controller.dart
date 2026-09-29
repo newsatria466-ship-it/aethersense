@@ -21,11 +21,13 @@ class TelemetryController extends ChangeNotifier {
   String? _parseWarning;
   Timer? _freshnessTimer;
 
-  // Smart Lamp Relay States
+  // Smart Lamp Relay & LDR States
   bool _relay1 = false;
   bool _relay2 = false;
   bool _relay3 = false;
   bool _relay4 = false;
+  String _lightingMode = 'auto'; // 'auto' (LDR) or 'manual' (Operator)
+  bool _isPendingModeChange = false;
   final Set<dynamic> _pendingRelays = {};
 
   // Getters
@@ -53,6 +55,14 @@ class TelemetryController extends ChangeNotifier {
     if (relay4) count++;
     return count;
   }
+
+  // LDR & Lighting Mode Getters
+  String get lightingMode => _latestTelemetry?.lightingMode ?? _lightingMode;
+  bool get isAutoMode => lightingMode == 'auto';
+  int get ldrRaw => _latestTelemetry?.ldrRaw ?? 0;
+  String get ambientLight => _latestTelemetry?.ambientLight ?? 'Terang';
+  bool get isDark => _latestTelemetry?.isDark ?? false;
+  bool get isPendingModeChange => _isPendingModeChange;
 
   // Freshness
   String get freshnessText => AetherFormatters.formatFreshness(_latestTelemetry?.receivedAt);
@@ -94,17 +104,20 @@ class TelemetryController extends ChangeNotifier {
       }
 
       _parseWarning = null;
-      // Sync relay states from telemetry
+      // Sync relay states and lighting mode from telemetry
       _relay1 = telemetryData.relay1;
       _relay2 = telemetryData.relay2;
       _relay3 = telemetryData.relay3;
       _relay4 = telemetryData.relay4;
+      _lightingMode = telemetryData.lightingMode;
       _pendingRelays.clear();
+      _isPendingModeChange = false;
 
       if (kDebugMode) {
         print('[AetherSense][MQTT] Device: ${telemetryData.deviceId}');
         print('[AetherSense][MQTT] Telemetry updated. Seq: #${telemetryData.sequence}, Flood: ${telemetryData.floodStatus}, Water: ${telemetryData.waterLevelCm}cm');
         print('[AetherSense][MQTT] Relays -> R1: ${telemetryData.relay1}, R2: ${telemetryData.relay2}, R3: ${telemetryData.relay3}, R4: ${telemetryData.relay4}');
+        print('[AetherSense][MQTT] LDR -> Raw: ${telemetryData.ldrRaw}, Ambient: ${telemetryData.ambientLight}, Mode: ${telemetryData.lightingMode}');
       }
 
       notifyListeners();
@@ -116,6 +129,51 @@ class TelemetryController extends ChangeNotifier {
       // Last valid telemetry data retained!
       notifyListeners();
     }
+  }
+
+  /// Change lighting mode on ESP32:
+  /// 'auto' (Otomatis LDR) vs 'manual' (Manual Operator)
+  /// JSON: {"type": "lighting_mode", "mode": "auto" | "manual"}
+  Future<bool> setLightingMode(String mode) async {
+    if (_connectionStatus != MqttConnectionStateStatus.connected) {
+      if (kDebugMode) {
+        print('[AetherSense][CMD] Cannot change lighting mode, MQTT broker disconnected.');
+      }
+      return false;
+    }
+
+    final targetMode = mode.toLowerCase().trim() == 'manual' ? 'manual' : 'auto';
+    _isPendingModeChange = true;
+    _lightingMode = targetMode;
+    if (_latestTelemetry != null) {
+      _latestTelemetry = _latestTelemetry!.copyWith(lightingMode: targetMode);
+    }
+    notifyListeners();
+
+    final payloadMap = {
+      'type': 'lighting_mode',
+      'mode': targetMode,
+    };
+    final payloadJson = jsonEncode(payloadMap);
+
+    final devId = activeDeviceId;
+    bool success = false;
+    if (devId != null && devId.isNotEmpty && !devId.contains('UNKNOWN')) {
+      final topic = 'aethersense/$devId/command';
+      success = _mqttService.publish(topic, payloadJson);
+      _mqttService.publish('aethersense/command', payloadJson);
+    } else {
+      success = _mqttService.publish('aethersense/command', payloadJson);
+    }
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (_isPendingModeChange) {
+        _isPendingModeChange = false;
+        notifyListeners();
+      }
+    });
+
+    return success;
   }
 
   /// Send relay command to ESP32:
@@ -134,6 +192,9 @@ class TelemetryController extends ChangeNotifier {
 
     _pendingRelays.add(relay);
 
+    // Manual action switches lighting mode to 'manual' on ESP32
+    _lightingMode = 'manual';
+
     // Optimistic state update for instant UI feedback
     if (relay == 'all') {
       _relay1 = state;
@@ -146,27 +207,28 @@ class TelemetryController extends ChangeNotifier {
           relay2: state,
           relay3: state,
           relay4: state,
+          lightingMode: 'manual',
         );
       }
     } else if (relay == 1) {
       _relay1 = state;
       if (_latestTelemetry != null) {
-        _latestTelemetry = _latestTelemetry!.copyWith(relay1: state);
+        _latestTelemetry = _latestTelemetry!.copyWith(relay1: state, lightingMode: 'manual');
       }
     } else if (relay == 2) {
       _relay2 = state;
       if (_latestTelemetry != null) {
-        _latestTelemetry = _latestTelemetry!.copyWith(relay2: state);
+        _latestTelemetry = _latestTelemetry!.copyWith(relay2: state, lightingMode: 'manual');
       }
     } else if (relay == 3) {
       _relay3 = state;
       if (_latestTelemetry != null) {
-        _latestTelemetry = _latestTelemetry!.copyWith(relay3: state);
+        _latestTelemetry = _latestTelemetry!.copyWith(relay3: state, lightingMode: 'manual');
       }
     } else if (relay == 4) {
       _relay4 = state;
       if (_latestTelemetry != null) {
-        _latestTelemetry = _latestTelemetry!.copyWith(relay4: state);
+        _latestTelemetry = _latestTelemetry!.copyWith(relay4: state, lightingMode: 'manual');
       }
     }
     notifyListeners();

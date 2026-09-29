@@ -1,6 +1,6 @@
 {
-  "version": "1.0.5",
-  "versionCode": 6,
-  "changelog": "• Fitur Kontrol Smart Lamp (Penerangan Jalan & Sektor) terintegrasi penuh\n• Sinkronisasi real-time status 4 Sektor Relay (Alun-Alun, Jl. KH Wahid Hasyim, RTH Bahari, Tanggul Pesisir)\n• Master Switch Saklar Lampu (Nyalakan Semua & Matikan Semua)\n• Pengiriman perintah kontrol instan via MQTT ESP32 dengan optimistic update & proteksi broker terputus",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.5/app-release.apk"
+  "version": "1.0.6",
+  "versionCode": 7,
+  "changelog": "• Otomasi Penerangan Jalan Smart Lamp berbasis Sensor Ambien LDR (GPIO 09)\n• Pilihan Mode Operasi: Otomatis (LDR) vs Manual (Operator) tersinkronisasi dua arah\n• Status kondisi intensitas cahaya (Terang/Gelap & Raw ADC) real-time\n• Switch kontrol manual otomatis beralih ke mode manual untuk keamanan operasi\n• Kontrol Master dan 4 Sektor Relay responsif dengan optimistic update",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.6/app-release.apk"
 }

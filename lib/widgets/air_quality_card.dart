@@ -19,16 +19,69 @@ class AirQualityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isPolusiRingan = airQualityStatus.toLowerCase().contains('polusi ringan');
+    final isSangatBersih = airQualityStatus.toLowerCase().contains('sangat bersih');
+
     final cardBg = isGasPolluted
         ? (isDark ? const Color(0x35EF4444) : const Color(0xFFFEF2F2))
-        : (isDark ? AetherConstants.surfaceDark : Colors.white);
+        : isPolusiRingan
+            ? (isDark ? const Color(0x22F59E0B) : const Color(0xFFFFFBEB))
+            : (isDark ? AetherConstants.surfaceDark : Colors.white);
 
     final borderColor = isGasPolluted
         ? (isDark ? const Color(0x88EF4444) : const Color(0xFFFCA5A5))
-        : (isDark ? AetherConstants.borderDark : AetherConstants.borderLight);
+        : isPolusiRingan
+            ? (isDark ? const Color(0x88F59E0B) : const Color(0xFFFDE68A))
+            : (isDark ? AetherConstants.borderDark : AetherConstants.borderLight);
 
     final textPrimary = isDark ? AetherConstants.textPrimaryDark : AetherConstants.textPrimaryLight;
     final textSecondary = isDark ? AetherConstants.textSecondaryDark : AetherConstants.textSecondaryLight;
+
+    final badgeText = isGasPolluted
+        ? 'TERCEMAR'
+        : isPolusiRingan
+            ? 'POLUSI RINGAN'
+            : isSangatBersih
+                ? 'SANGAT BERSIH'
+                : 'BAIK';
+
+    final badgeBg = isGasPolluted
+        ? const Color(0xFFEF4444)
+        : isPolusiRingan
+            ? (isDark ? const Color(0x30F59E0B) : const Color(0xFFFEF3C7))
+            : isSangatBersih
+                ? (isDark ? const Color(0x30059669) : const Color(0xFFD1FAE5))
+                : (isDark ? const Color(0x3010B981) : const Color(0xFFDCFCE7));
+
+    final badgeTextColor = isGasPolluted
+        ? Colors.white
+        : isPolusiRingan
+            ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309))
+            : isSangatBersih
+                ? (isDark ? const Color(0xFF34D399) : const Color(0xFF047857))
+                : (isDark ? const Color(0xFF34D399) : const Color(0xFF15803D));
+
+    final statusTextColor = isGasPolluted
+        ? const Color(0xFFDC2626)
+        : isPolusiRingan
+            ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706))
+            : isSangatBersih
+                ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
+                : textPrimary;
+
+    final iconColor = isGasPolluted
+        ? const Color(0xFFDC2626)
+        : isPolusiRingan
+            ? const Color(0xFFF59E0B)
+            : isSangatBersih
+                ? const Color(0xFF059669)
+                : (isDark ? AetherConstants.cyanAccent : const Color(0xFF0284C7));
+
+    final iconBg = isGasPolluted
+        ? const Color(0xFFFEE2E2)
+        : isPolusiRingan
+            ? const Color(0xFFFEF3C7)
+            : (isDark ? const Color(0x2538BDF8) : const Color(0xFFE0F2FE));
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -61,16 +114,12 @@ class AirQualityCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: isGasPolluted
-                          ? const Color(0xFFFEE2E2)
-                          : (isDark ? const Color(0x2538BDF8) : const Color(0xFFE0F2FE)),
+                      color: iconBg,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.air_rounded,
-                      color: isGasPolluted
-                          ? const Color(0xFFDC2626)
-                          : (isDark ? AetherConstants.cyanAccent : const Color(0xFF0284C7)),
+                      color: iconColor,
                       size: 18,
                     ),
                   ),
@@ -86,23 +135,19 @@ class AirQualityCard extends StatelessWidget {
                   ),
                 ],
               ),
-              // Badge Bahaya / Normal
+              // Badge Status
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isGasPolluted
-                      ? const Color(0xFFEF4444)
-                      : (isDark ? const Color(0x3010B981) : const Color(0xFFDCFCE7)),
+                  color: badgeBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isGasPolluted ? 'BAHAYA GAS' : 'NORMAL',
+                  badgeText,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: isGasPolluted
-                        ? Colors.white
-                        : (isDark ? const Color(0xFF34D399) : const Color(0xFF15803D)),
+                    color: badgeTextColor,
                   ),
                 ),
               ),
@@ -117,9 +162,7 @@ class AirQualityCard extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: isGasPolluted
-                  ? const Color(0xFFDC2626)
-                  : textPrimary,
+              color: statusTextColor,
               letterSpacing: -0.5,
             ),
           ),

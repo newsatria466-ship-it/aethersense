@@ -108,25 +108,22 @@ class TelemetryData {
     final mqAdc = _parseInt(json['mq135_adc_mv']);
     final mqSensor = _parseDouble(json['mq135_sensor_mv']);
 
-    // Kalibrasi cerdas ambang batas kualitas udara MQ-135:
-    // Standar ambang batas:
-    // < 800 (atau sensor < 1000 mV) : Normal / Baik (is_gas_polluted: false)
-    // 800 - 1500                    : Udara Sedang  (is_gas_polluted: false)
-    // > 1500 (atau sensor > 1800 mV): Tercemar / Bahaya Gas (is_gas_polluted: true)
-    String airStatus = json['air_quality_status']?.toString() ?? 'Normal / Baik';
+    // Kalibrasi ambang batas kualitas udara MQ-135:
+    String airStatus = json['air_quality_status']?.toString() ?? 'Normal / Cukup Baik';
     bool gasPolluted = _parseBool(json['is_gas_polluted']);
 
-    if (mqRaw > 0 || mqSensor > 0) {
-      if (mqRaw > 1500 || mqSensor > 1800.0) {
-        airStatus = 'Tercemar / Bahaya';
-        gasPolluted = true;
-      } else if (mqRaw >= 800 || mqSensor >= 1000.0) {
-        airStatus = 'Udara Sedang';
-        gasPolluted = false;
-      } else {
-        airStatus = 'Normal / Baik';
-        gasPolluted = false;
-      }
+    if (mqRaw < 350) {
+      airStatus = 'Sangat Bersih';
+      gasPolluted = false;
+    } else if (mqRaw < 1500) {
+      airStatus = 'Normal / Cukup Baik';
+      gasPolluted = false;
+    } else if (mqRaw <= 3000) {
+      airStatus = 'Polusi Ringan';
+      gasPolluted = false;
+    } else {
+      airStatus = 'Tercemar';
+      gasPolluted = true;
     }
 
     final rainRawVal = _parseInt(json['rain_raw']);

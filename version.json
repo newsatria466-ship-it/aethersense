@@ -1,6 +1,6 @@
 {
-  "version": "1.0.7",
-  "versionCode": 8,
-  "changelog": "• Interactive Auto-Sliding Carousel Card (Geser otomatis 4s & Swipe manual)\n• 4 Halaman Slide: Deteksi Ketinggian Air & Banjir, Penerangan Sektor & Ambien LDR, Iklim & Suhu Lingkungan, serta Status Perangkat IoT\n• Animated page dots indicator modern selaras tema Tegal EcoSense\n• Tata letak presisi dan responsif tepat di bawah chip landmark",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.7/app-release.apk"
+  "version": "1.0.8",
+  "versionCode": 9,
+  "changelog": "• Kalibrasi Threshold Sensor MQ-135 Kualitas Udara:\n  - < 350: Sangat Bersih\n  - < 1500: Normal / Cukup Baik\n  - <= 3000: Polusi Ringan\n  - > 3000: Tercemar (Bahaya Gas)\n• Visual badge status & kartu kualitas udara dinamis 4 level",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.8/app-release.apk"
 }

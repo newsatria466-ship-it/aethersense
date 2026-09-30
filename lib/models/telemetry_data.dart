@@ -26,6 +26,14 @@ class TelemetryData {
   final bool relay2;
   final bool relay3;
   final bool relay4;
+  final int parkingTotalSlots;
+  final int parkingOccupiedSlots;
+  final int parkingAvailableSlots;
+  final bool isParkingFull;
+  final bool entryGateOpen;
+  final bool exitGateOpen;
+  final bool irEntryDetected;
+  final bool irExitDetected;
   final DateTime receivedAt;
 
   TelemetryData({
@@ -56,6 +64,14 @@ class TelemetryData {
     this.relay2 = false,
     this.relay3 = false,
     this.relay4 = false,
+    this.parkingTotalSlots = 10,
+    this.parkingOccupiedSlots = 0,
+    this.parkingAvailableSlots = 10,
+    this.isParkingFull = false,
+    this.entryGateOpen = false,
+    this.exitGateOpen = false,
+    this.irEntryDetected = false,
+    this.irExitDetected = false,
     DateTime? receivedAt,
   }) : receivedAt = receivedAt ?? DateTime.now();
 
@@ -213,6 +229,16 @@ class TelemetryData {
       if (rl.length > 3) r4 = _parseBool(rl[3]);
     }
 
+    // Smart Parking Telemetry (10 Slots Kapasitas)
+    final totalSlots = _parseInt(json['parking_total_slots'] ?? json['total_slots'], 10);
+    final occupiedSlots = _parseInt(json['parking_occupied_slots'] ?? json['occupied_slots'], 0);
+    final availSlots = _parseInt(json['parking_available_slots'] ?? json['available_slots'], totalSlots - occupiedSlots);
+    final parkFull = _parseBool(json['is_parking_full'] ?? (occupiedSlots >= totalSlots));
+    final entryGate = _parseBool(json['entry_gate_open']);
+    final exitGate = _parseBool(json['exit_gate_open']);
+    final irEntry = _parseBool(json['ir_entry_detected']);
+    final irExit = _parseBool(json['ir_exit_detected']);
+
     return TelemetryData(
       deviceId: devId,
       sequence: seq,
@@ -241,6 +267,14 @@ class TelemetryData {
       relay2: r2,
       relay3: r3,
       relay4: r4,
+      parkingTotalSlots: totalSlots,
+      parkingOccupiedSlots: occupiedSlots,
+      parkingAvailableSlots: availSlots,
+      isParkingFull: parkFull,
+      entryGateOpen: entryGate,
+      exitGateOpen: exitGate,
+      irEntryDetected: irEntry,
+      irExitDetected: irExit,
       receivedAt: DateTime.now(),
     );
   }
@@ -273,6 +307,14 @@ class TelemetryData {
     bool? relay2,
     bool? relay3,
     bool? relay4,
+    int? parkingTotalSlots,
+    int? parkingOccupiedSlots,
+    int? parkingAvailableSlots,
+    bool? isParkingFull,
+    bool? entryGateOpen,
+    bool? exitGateOpen,
+    bool? irEntryDetected,
+    bool? irExitDetected,
     DateTime? receivedAt,
   }) {
     return TelemetryData(
@@ -303,6 +345,14 @@ class TelemetryData {
       relay2: relay2 ?? this.relay2,
       relay3: relay3 ?? this.relay3,
       relay4: relay4 ?? this.relay4,
+      parkingTotalSlots: parkingTotalSlots ?? this.parkingTotalSlots,
+      parkingOccupiedSlots: parkingOccupiedSlots ?? this.parkingOccupiedSlots,
+      parkingAvailableSlots: parkingAvailableSlots ?? this.parkingAvailableSlots,
+      isParkingFull: isParkingFull ?? this.isParkingFull,
+      entryGateOpen: entryGateOpen ?? this.entryGateOpen,
+      exitGateOpen: exitGateOpen ?? this.exitGateOpen,
+      irEntryDetected: irEntryDetected ?? this.irEntryDetected,
+      irExitDetected: irExitDetected ?? this.irExitDetected,
       receivedAt: receivedAt ?? this.receivedAt,
     );
   }
@@ -336,6 +386,14 @@ class TelemetryData {
       'relay2': relay2,
       'relay3': relay3,
       'relay4': relay4,
+      'parking_total_slots': parkingTotalSlots,
+      'parking_occupied_slots': parkingOccupiedSlots,
+      'parking_available_slots': parkingAvailableSlots,
+      'is_parking_full': isParkingFull,
+      'entry_gate_open': entryGateOpen,
+      'exit_gate_open': exitGateOpen,
+      'ir_entry_detected': irEntryDetected,
+      'ir_exit_detected': irExitDetected,
     };
   }
 }

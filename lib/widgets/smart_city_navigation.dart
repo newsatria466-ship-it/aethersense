@@ -47,14 +47,14 @@ class SmartCityNavigation extends StatelessWidget {
             ),
           ),
 
-          // Tab 2: Smart Parking (Coming Soon)
+          // Tab 2: Smart Parking (Active)
           Expanded(
             child: _buildTabItem(
               context: context,
               index: 1,
               icon: Icons.local_parking_rounded,
               title: 'Smart Parking',
-              subtitle: 'Segera Hadir',
+              subtitle: '10 Slot Parkir',
               isActive: currentIndex == 1,
               isDark: isDark,
             ),
@@ -91,13 +91,7 @@ class SmartCityNavigation extends StatelessWidget {
     final inactiveColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return InkWell(
-      onTap: () {
-        if (index == 1) {
-          _showComingSoonNotice(context, title, isDark);
-        } else {
-          onTabSelected(index);
-        }
-      },
+      onTap: () => onTabSelected(index),
       borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -134,31 +128,6 @@ class SmartCityNavigation extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showComingSoonNotice(BuildContext context, String moduleName, bool isDark) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline_rounded,
-                color: isDark ? AetherConstants.cyanAccent : Colors.white, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Modul $moduleName sedang dalam integrasi ekosistem Tegal EcoSense.',
-                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF1E293B),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 2),
       ),
     );
   }

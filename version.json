@@ -1,6 +1,6 @@
 {
-  "version": "1.0.8",
-  "versionCode": 9,
-  "changelog": "• Kalibrasi Threshold Sensor MQ-135 Kualitas Udara:\n  - < 350: Sangat Bersih\n  - < 1500: Normal / Cukup Baik\n  - <= 3000: Polusi Ringan\n  - > 3000: Tercemar (Bahaya Gas)\n• Visual badge status & kartu kualitas udara dinamis 4 level",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.8/app-release.apk"
+  "version": "1.0.9",
+  "versionCode": 10,
+  "changelog": "• Integrasi Penuh Fitur Smart Parking System (10 Slot Kapasitas)\n• Monitoring Palang Gerbang Otomatis Dual-Servo (Pintu Masuk & Pintu Keluar)\n• Deteksi Sensor Inframerah (IR Entry GPIO 1 & IR Exit GPIO 2) real-time\n• Denah Visual 10 Slot Parkir Interaktif (Slot Kosong vs Terisi)\n• Tombol Reset Kuota Parkir dengan Perintah MQTT langsung ke ESP32",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.9/app-release.apk"
 }

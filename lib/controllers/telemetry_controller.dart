@@ -64,6 +64,18 @@ class TelemetryController extends ChangeNotifier {
   bool get isDark => _latestTelemetry?.isDark ?? false;
   bool get isPendingModeChange => _isPendingModeChange;
 
+  // Smart Parking Getters
+  int get parkingTotalSlots => _latestTelemetry?.parkingTotalSlots ?? 10;
+  int get parkingOccupiedSlots => _latestTelemetry?.parkingOccupiedSlots ?? 0;
+  int get parkingAvailableSlots => _latestTelemetry?.parkingAvailableSlots ?? 10;
+  bool get isParkingFull => _latestTelemetry?.isParkingFull ?? false;
+  bool get isEntryGateOpen => _latestTelemetry?.entryGateOpen ?? false;
+  bool get isExitGateOpen => _latestTelemetry?.exitGateOpen ?? false;
+  bool get isIrEntryDetected => _latestTelemetry?.irEntryDetected ?? false;
+  bool get isIrExitDetected => _latestTelemetry?.irExitDetected ?? false;
+  bool get isResettingParking => _isResettingParking;
+  bool _isResettingParking = false;
+
   // Freshness
   String get freshnessText => AetherFormatters.formatFreshness(_latestTelemetry?.receivedAt);
   bool get isTelemetryDelayed => AetherFormatters.isDelayed(_latestTelemetry?.receivedAt);
@@ -256,6 +268,43 @@ class TelemetryController extends ChangeNotifier {
       if (_pendingRelays.remove(relay)) {
         notifyListeners();
       }
+    });
+
+    return success;
+  }
+
+  /// Reset parking occupancy back to 0/10 slots
+  Future<bool> resetParkingSlots() async {
+    _isResettingParking = true;
+    if (_latestTelemetry != null) {
+      _latestTelemetry = _latestTelemetry!.copyWith(
+        parkingOccupiedSlots: 0,
+        parkingAvailableSlots: parkingTotalSlots,
+        isParkingFull: false,
+      );
+    }
+    notifyListeners();
+
+    // Prepare JSON command: {"type": "parking_reset", "occupied": 0}
+    final payloadMap = {
+      'type': 'parking_reset',
+      'occupied': 0,
+    };
+    final payloadJson = jsonEncode(payloadMap);
+
+    final devId = activeDeviceId;
+    bool success = false;
+    if (devId != null && devId.isNotEmpty && !devId.contains('UNKNOWN')) {
+      final topic = 'aethersense/$devId/command';
+      success = _mqttService.publish(topic, payloadJson);
+      _mqttService.publish('aethersense/command', payloadJson);
+    } else {
+      success = _mqttService.publish('aethersense/command', payloadJson);
+    }
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      _isResettingParking = false;
+      notifyListeners();
     });
 
     return success;

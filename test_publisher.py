@@ -140,7 +140,23 @@ if __name__ == "__main__":
                 "water_level_cm": water_lvl,
                 "flood_status": flood_status,
                 "is_flood_warning": is_flood_warning,
-                "wifi_rssi_dbm": rssi
+                "wifi_rssi_dbm": rssi,
+                "ldr_raw": 1250,
+                "ambient_light": "Terang",
+                "is_dark": False,
+                "lighting_mode": "auto",
+                "relay1": False,
+                "relay2": False,
+                "relay3": False,
+                "relay4": False,
+                "parking_total_slots": 10,
+                "parking_occupied_slots": 3,
+                "parking_available_slots": 7,
+                "is_parking_full": False,
+                "entry_gate_open": False,
+                "exit_gate_open": False,
+                "ir_entry_detected": False,
+                "ir_exit_detected": False
             }
 
             json_str = json.dumps(payload)

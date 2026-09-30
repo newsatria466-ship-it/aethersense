@@ -15,6 +15,7 @@ import '../widgets/rain_sensor_card.dart';
 import '../widgets/technical_info_card.dart';
 import '../widgets/smart_city_navigation.dart';
 import '../widgets/smart_lamp_section.dart';
+import '../widgets/smart_parking_section.dart';
 import 'widgets/update_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -402,6 +403,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Tab View Switcher
                     if (_selectedNavIndex == 2)
                       const SmartLampSection()
+                    else if (_selectedNavIndex == 1)
+                      const SmartParkingSection()
                     else
                       _buildMonitoringSection(
                         context: context,

@@ -335,35 +335,34 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
 
         const SizedBox(height: 12),
 
-        // 3. Quick Landmark Switcher Chips
-        Padding(
+        // 3. Quick Landmark Switcher Chips (Scrollable Horizontal & Anti-Truncate)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildLandmarkChip(
-                  label: 'Alun-Alun Tegal',
-                  imagePath: 'assets/images/hero-alun-alun.jpeg',
-                  coords: '6°52\'S 109°08\'E',
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 8),
-                _buildLandmarkChip(
-                  label: 'Jalan Pancasila',
-                  imagePath: 'assets/images/jalan-pancasila.jpeg',
-                  coords: '6°52\'S 109°08\'E',
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 8),
-                _buildLandmarkChip(
-                  label: 'Masjid Agung Tegal',
-                  imagePath: 'assets/images/masjid-agung.jpeg',
-                  coords: '6°52\'S 109°08\'E',
-                  isDark: isDark,
-                ),
-              ],
-            ),
+          child: Row(
+            children: [
+              _buildLandmarkChip(
+                label: 'Alun-Alun Tegal',
+                imagePath: 'assets/images/hero-alun-alun.jpeg',
+                coords: '6°52\'S 109°08\'E',
+                isDark: isDark,
+              ),
+              const SizedBox(width: 8),
+              _buildLandmarkChip(
+                label: 'Jalan Pancasila',
+                imagePath: 'assets/images/jalan-pancasila.jpeg',
+                coords: '6°52\'S 109°08\'E',
+                isDark: isDark,
+              ),
+              const SizedBox(width: 8),
+              _buildLandmarkChip(
+                label: 'Masjid Agung Tegal',
+                imagePath: 'assets/images/masjid-agung.jpeg',
+                coords: '6°52\'S 109°08\'E',
+                isDark: isDark,
+              ),
+            ],
           ),
         ),
 
@@ -387,31 +386,60 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
     final isSelected = _selectedImage == imagePath;
     final primaryColor = isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue;
 
-    return ActionChip(
-      onPressed: () => _switchLandmark(imagePath, label, coords),
-      avatar: isSelected
-          ? Icon(Icons.check, size: 14, color: isSelected ? Colors.white : primaryColor)
-          : null,
-      label: Text(
-        label,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          color: isSelected
-              ? Colors.white
-              : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155)),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _switchLandmark(imagePath, label, coords),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? primaryColor.withValues(alpha: 0.22) : const Color(0xFFEFF6FF))
+                : (isDark ? AetherConstants.surfaceDark : Colors.white),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? primaryColor
+                  : (isDark ? AetherConstants.borderDark : AetherConstants.borderLight),
+              width: isSelected ? 1.4 : 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle_rounded : Icons.location_on_rounded,
+                size: 13,
+                color: isSelected
+                    ? primaryColor
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11.5,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected
+                      ? (isDark ? Colors.white : primaryColor)
+                      : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155)),
+                ),
+                softWrap: false,
+                overflow: TextOverflow.visible,
+              ),
+            ],
+          ),
         ),
       ),
-      backgroundColor: isSelected
-          ? primaryColor
-          : (isDark ? AetherConstants.surfaceDark : Colors.white),
-      side: BorderSide(
-        color: isSelected
-            ? primaryColor
-            : (isDark ? AetherConstants.borderDark : AetherConstants.borderLight),
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
     );
   }
 

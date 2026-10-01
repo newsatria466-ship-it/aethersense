@@ -345,7 +345,7 @@ class _OverviewCarouselCardState extends State<OverviewCarouselCard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'HC-SR04',
+                  'Sensor Air',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -748,7 +748,7 @@ class _OverviewCarouselCardState extends State<OverviewCarouselCard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'DHT22',
+                  'Suhu & Udara',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -929,7 +929,7 @@ class _OverviewCarouselCardState extends State<OverviewCarouselCard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'ESP32-S3',
+                  'Status IoT',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,

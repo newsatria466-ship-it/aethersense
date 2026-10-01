@@ -77,7 +77,7 @@ class FloodMonitorCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'HC-SR04 • KETINGGIAN AIR',
+                    'KETINGGIAN AIR',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

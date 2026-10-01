@@ -643,8 +643,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             wifiRssiDbm: telemetry?.wifiRssiDbm ?? -70,
           ),
 
-          // Bottom padding for navigation clearance
-          const SizedBox(height: 96),
+          // Bottom padding for navigation clearance (ensuring full scroll visibility)
+          const SizedBox(height: 120),
         ],
       ),
     );

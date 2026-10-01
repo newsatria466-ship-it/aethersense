@@ -54,7 +54,7 @@ class ClimateCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'DHT22 • IKLIM & SUHU',
+                'IKLIM & SUHU',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,

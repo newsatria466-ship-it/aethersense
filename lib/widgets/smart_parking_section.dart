@@ -132,8 +132,6 @@ class SmartParkingSection extends StatelessWidget {
                   context: context,
                   isDark: isDark,
                   title: 'PINTU MASUK',
-                  servoPin: 'GPIO 21',
-                  irPin: 'GPIO 1',
                   isOpen: isEntryOpen,
                   isIrDetected: isIrEntry,
                   irActionLabel: 'Mobil Masuk',
@@ -147,8 +145,6 @@ class SmartParkingSection extends StatelessWidget {
                   context: context,
                   isDark: isDark,
                   title: 'PINTU KELUAR',
-                  servoPin: 'GPIO 47',
-                  irPin: 'GPIO 2',
                   isOpen: isExitOpen,
                   isIrDetected: isIrExit,
                   irActionLabel: 'Mobil Keluar',
@@ -194,12 +190,8 @@ class SmartParkingSection extends StatelessWidget {
             textPrimary: textPrimary,
           ),
 
-          const SizedBox(height: 18),
-
-          // 4. System Specifications Card
-          _buildSystemSpecCard(isDark, textPrimary, textSecondary),
-
-          const SizedBox(height: 80),
+          // Bottom clearance for navigation bar
+          const SizedBox(height: 120),
         ],
       ),
     );
@@ -421,8 +413,6 @@ class SmartParkingSection extends StatelessWidget {
     required BuildContext context,
     required bool isDark,
     required String title,
-    required String servoPin,
-    required String irPin,
     required bool isOpen,
     required bool isIrDetected,
     required String irActionLabel,
@@ -456,7 +446,7 @@ class SmartParkingSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gate Title & Servo Pin
+          // Gate Title
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -476,9 +466,9 @@ class SmartParkingSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  servoPin,
+                  'PALANG OTOMATIS',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9.5,
+                    fontSize: 8.5,
                     fontWeight: FontWeight.w700,
                     color: textSecondary,
                   ),
@@ -561,7 +551,7 @@ class SmartParkingSection extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  isIrDetected ? '$irActionLabel ($irPin)' : 'Sensor IR ($irPin): Bebas',
+                  isIrDetected ? '$irActionLabel Terdeteksi' : 'Sensor IR: Siaga',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 10,
                     fontWeight: isIrDetected ? FontWeight.w800 : FontWeight.w500,
@@ -650,54 +640,6 @@ class SmartParkingSection extends StatelessWidget {
     );
   }
 
-  // ==========================================
-  // 4. SYSTEM SPECIFICATIONS CARD
-  // ==========================================
-  Widget _buildSystemSpecCard(bool isDark, Color textPrimary, Color textSecondary) {
-    final cardBg = isDark ? AetherConstants.surfaceDark : Colors.white;
-    final borderColor = isDark ? AetherConstants.borderDark : AetherConstants.borderLight;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF38BDF8)),
-              const SizedBox(width: 8),
-              Text(
-                'Logika Otomasi Palang Parkir ESP32-S3',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '• Masuk: IR Masuk (GPIO 1) mendeteksi kendaraan -> Servo Masuk (GPIO 21) membuka 90° -> Otomatis menutup 1.5s setelah mobil lewat -> Kuota bertambah.\n'
-            '• Keluar: IR Keluar (GPIO 2) mendeteksi kendaraan -> Servo Keluar (GPIO 47) membuka 90° -> Menutup 1.5s -> Kuota berkurang.\n'
-            '• Proteksi Penuh: Ketika kuota mencapai 10/10, palang masuk terkunci rapat di posisi 0°.',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildLegendItem(Color color, String label, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -735,7 +677,7 @@ class SmartParkingSection extends StatelessWidget {
           ),
         ),
         content: Text(
-          'Tindakan ini akan mengosongkan status terisi kembali menjadi 0/10 slot kosong melalui perintah MQTT ke ESP32.',
+          'Tindakan ini akan mengosongkan status kuota terisi kembali menjadi 0/10 slot kosong.',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -759,7 +701,7 @@ class SmartParkingSection extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Perintah reset kuota parkir telah dikirim ke ESP32',
+                    'Perintah reset kuota parkir telah berhasil dikirim',
                     style: GoogleFonts.plusJakartaSans(color: Colors.white),
                   ),
                   backgroundColor: const Color(0xFF0284C7),

@@ -125,7 +125,7 @@ class AirQualityCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'MQ-135 • KUALITAS UDARA',
+                    'KUALITAS UDARA',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.9",
-  "versionCode": 10,
-  "changelog": "• Integrasi Penuh Fitur Smart Parking System (10 Slot Kapasitas)\n• Monitoring Palang Gerbang Otomatis Dual-Servo (Pintu Masuk & Pintu Keluar)\n• Deteksi Sensor Inframerah (IR Entry GPIO 1 & IR Exit GPIO 2) real-time\n• Denah Visual 10 Slot Parkir Interaktif (Slot Kosong vs Terisi)\n• Tombol Reset Kuota Parkir dengan Perintah MQTT langsung ke ESP32",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.9/app-release.apk"
+  "version": "1.0.10",
+  "versionCode": 11,
+  "changelog": "• Pembersihan UI/UX: Menghapus seluruh teks dan badge teknis pin/GPIO mikrokontroler agar lebih ramah pengguna\n• Efek Teks Berjalan (Auto-scrolling Marquee) pada nama sektor Smart Lamp sehingga tidak terpotong\n• Perapian baris filter lokasi beranda (chip horizontal fleksibel anti-terpotong)\n• Penyederhanaan tampilan Smart Parking fokus pada status slot & palang otomatis\n• Penambahan bottom padding ekstra di seluruh halaman agar konten dan tombol tidak tertutup navigasi",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.10/app-release.apk"
 }

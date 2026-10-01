@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/telemetry_controller.dart';
 import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
+import 'auto_scroll_marquee_text.dart';
 
 class SmartLampSection extends StatelessWidget {
   const SmartLampSection({super.key});
@@ -215,7 +216,6 @@ class SmartLampSection extends StatelessWidget {
             controller: controller,
             sectorNumber: 1,
             title: 'Sektor 01: Kawasan Alun-Alun & Monumen Bahari',
-            gpioLabel: 'IN1 • GPIO 38',
             subtitle: 'Kawasan Pusat Titik Nol & Ikon Wisata Tegal',
             isOn: controller.relay1,
             isDark: isDark,
@@ -233,7 +233,6 @@ class SmartLampSection extends StatelessWidget {
             controller: controller,
             sectorNumber: 2,
             title: 'Sektor 02: Koridor Jl. KH Wahid Hasyim',
-            gpioLabel: 'IN2 • GPIO 39',
             subtitle: 'Koridor Utama Pusat Niaga & Kuliner Malam',
             isOn: controller.relay2,
             isDark: isDark,
@@ -251,7 +250,6 @@ class SmartLampSection extends StatelessWidget {
             controller: controller,
             sectorNumber: 3,
             title: 'Sektor 03: RTH & Jalur Sepeda Bahari',
-            gpioLabel: 'IN3 • GPIO 40',
             subtitle: 'Ruang Terbuka Hijau & Trek Rekreasi Warga',
             isOn: controller.relay3,
             isDark: isDark,
@@ -269,7 +267,6 @@ class SmartLampSection extends StatelessWidget {
             controller: controller,
             sectorNumber: 4,
             title: 'Sektor 04: Saluran Drainase & Tanggul Pesisir',
-            gpioLabel: 'IN4 • GPIO 41',
             subtitle: 'Penerangan Inspeksi Pompa & Mitigasi Rob',
             isOn: controller.relay4,
             isDark: isDark,
@@ -315,7 +312,7 @@ class SmartLampSection extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Sensor LDR terhubung pada GPIO 9 ESP32. Pada mode otomatis, sistem menyalakan lampu jalan saat senja/malam secara mandiri, menghemat konsumsi energi secara terukur untuk Kota Tegal.',
+                        'Pada mode otomatis, sensor cahaya mengontrol penerangan jalan saat senja dan malam secara mandiri, menghemat konsumsi energi secara terukur untuk Kota Tegal.',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           height: 1.4,
@@ -330,7 +327,7 @@ class SmartLampSection extends StatelessWidget {
           ),
 
           // Bottom margin for navigation clearance
-          const SizedBox(height: 96),
+          const SizedBox(height: 120),
         ],
       ),
     );
@@ -432,9 +429,9 @@ class SmartLampSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'GPIO 09',
+                            'SENSOR CAHAYA',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w700,
                               color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
                             ),
@@ -823,7 +820,7 @@ class SmartLampSection extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Perintah menyalakan seluruh sektor terkirim ke ESP32',
+                                'Perintah menyalakan seluruh sektor berhasil dikirim',
                                 style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12),
                               ),
                               backgroundColor: const Color(0xFFB45309),
@@ -867,7 +864,7 @@ class SmartLampSection extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Perintah memadamkan seluruh sektor terkirim ke ESP32',
+                                'Perintah memadamkan seluruh sektor berhasil dikirim',
                                 style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12),
                               ),
                               backgroundColor: const Color(0xFF334155),
@@ -911,7 +908,6 @@ class SmartLampSection extends StatelessWidget {
     required TelemetryController controller,
     required int sectorNumber,
     required String title,
-    required String gpioLabel,
     required String subtitle,
     required bool isOn,
     required bool isDark,
@@ -1005,19 +1001,17 @@ class SmartLampSection extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title & GPIO Pill
+                  // Title Marquee Text (Smooth horizontal auto-scroller)
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
+                        child: AutoScrollMarqueeText(
+                          text: title,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                             color: textPrimary,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1038,7 +1032,7 @@ class SmartLampSection extends StatelessWidget {
 
                   const SizedBox(height: 6),
 
-                  // Status Badge & Hardware Tag
+                  // Status Badge
                   Row(
                     children: [
                       // Badge Menyala / Padam
@@ -1074,25 +1068,6 @@ class SmartLampSection extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // GPIO Pin Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0x2538BDF8) : const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          gpioLabel,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? AetherConstants.cyanAccent : AetherConstants.primaryBlue,
-                          ),
                         ),
                       ),
                     ],

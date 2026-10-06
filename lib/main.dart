@@ -5,11 +5,13 @@ import 'package:provider/provider.dart';
 import 'controllers/telemetry_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'screens/dashboard_screen.dart';
+import 'services/monitoring_history_service.dart';
 import 'services/update_service.dart';
 import 'utils/constants.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MonitoringHistoryService.instance.init();
 
   runApp(const AetherSenseApp());
 }

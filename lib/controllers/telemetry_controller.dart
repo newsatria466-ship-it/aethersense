@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/telemetry_data.dart';
+import '../services/monitoring_history_service.dart';
 import '../services/mqtt_service.dart';
 import '../utils/formatters.dart';
 
@@ -114,6 +115,9 @@ class TelemetryController extends ChangeNotifier {
         _latestTelemetry = telemetryData;
         _activeDeviceId = telemetryData.deviceId;
       }
+
+      // Record hourly environmental monitoring snapshot to local storage
+      MonitoringHistoryService.instance.recordSnapshot(telemetryData);
 
       _parseWarning = null;
       // Sync relay states and lighting mode from telemetry

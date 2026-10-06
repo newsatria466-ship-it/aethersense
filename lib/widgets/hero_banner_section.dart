@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/telemetry_data.dart';
 import '../services/mqtt_service.dart';
 import '../utils/constants.dart';
+import 'monitoring_history_modal.dart';
 import 'overview_carousel_card.dart';
 
 class HeroBannerSection extends StatefulWidget {
@@ -327,6 +328,13 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
                       ],
                     ),
                   ),
+
+                  // Tombol Dropdown Riwayat Data di sudut kanan atas foto
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    child: _buildHistoryDropdownPill(context),
+                  ),
                 ],
               ),
             ),
@@ -551,4 +559,95 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
       },
     );
   }
+
+  Widget _buildHistoryDropdownPill(BuildContext context) {
+    return PopupMenuButton<int>(
+      tooltip: 'Pilih Rentang Riwayat',
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      color: widget.isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+      elevation: 8,
+      offset: const Offset(0, 42),
+      onSelected: (days) {
+        MonitoringHistoryModal.show(context, initialDays: days);
+      },
+      itemBuilder: (ctx) => [
+        _buildPopupMenuItem(7, '7 Hari Terakhir (Rekap Penuh)', Icons.calendar_month_rounded),
+        _buildPopupMenuItem(6, '6 Hari Terakhir', Icons.date_range_rounded),
+        _buildPopupMenuItem(5, '5 Hari Terakhir', Icons.date_range_rounded),
+        _buildPopupMenuItem(4, '4 Hari Terakhir', Icons.date_range_rounded),
+        _buildPopupMenuItem(3, '3 Hari Terakhir', Icons.date_range_rounded),
+        _buildPopupMenuItem(2, '2 Hari Terakhir', Icons.date_range_rounded),
+        _buildPopupMenuItem(1, '24 Jam Terakhir (Hari Ini)', Icons.today_rounded),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.insights_rounded,
+              size: 14,
+              color: Color(0xFF38BDF8),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              'Riwayat Data',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(width: 3),
+            const Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 16,
+              color: Colors.white70,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PopupMenuItem<int> _buildPopupMenuItem(int days, String label, IconData icon) {
+    return PopupMenuItem<int>(
+      value: days,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: const Color(0xFF0284C7),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: days == 7 ? FontWeight.w800 : FontWeight.w600,
+              color: widget.isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

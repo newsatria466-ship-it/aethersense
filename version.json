@@ -1,6 +1,6 @@
 {
-  "version": "1.0.11",
-  "versionCode": 12,
-  "changelog": "• Fitur Baru: Riwayat Data Smart Monitoring 7 Hari Terakhir (On-Device Local Storage)\n• Tombol Dropdown 'Riwayat Data' terintegrasi langsung di dalam foto Alun-Alun Tegal\n• Pilihan Rentang Fleksibel: 7 Hari, 6 Hari, 5 Hari, 4 Hari, 3 Hari, 2 Hari, hingga 24 Jam Terakhir\n• Popup Modal Interaktif: Grafik garis fluktuasi mulus (Custom Bezier), ringkasan nilai (Max, Min, Avg), dan log detail per jam\n• Khusus Smart Monitoring: Melacak Ketinggian Air/Banjir, Suhu, Kelembaban, MQ-135, dan Hujan",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.11/app-release.apk"
+  "version": "1.0.12",
+  "versionCode": 13,
+  "changelog": "• Penyempurnaan Riwayat Data: Penyesuaian rentang tanggal kalender asli secara dinamis (contoh: 3 Hari Terakhir 04 Okt – 06 Okt 2026)\n• Tampilan Rekap Data Per Hari (Day-by-Day): Data dikelompokkan rapi per tanggal kalender dengan ringkasan harian (Min, Max, Avg, Status Cuaca/Hujan)\n• Kartu Harian Interaktif & Expandable: Dapat membuka/menutup log 24 jam untuk tiap hari secara mandiri atau sekaligus (Buka/Tutup Semua)\n• Penanda Tanggal pada Grafik: Penanda tanggal/hari di sepanjang sumbu X grafik interaktif\n• Khusus Smart Monitoring: Melacak Ketinggian Air/Banjir, Suhu, Kelembaban, Kualitas Udara (MQ-135), dan Hujan",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.12/app-release.apk"
 }

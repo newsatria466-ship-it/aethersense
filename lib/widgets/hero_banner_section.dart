@@ -571,13 +571,13 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
         MonitoringHistoryModal.show(context, initialDays: days);
       },
       itemBuilder: (ctx) => [
-        _buildPopupMenuItem(7, '7 Hari Terakhir (Rekap Penuh)', Icons.calendar_month_rounded),
-        _buildPopupMenuItem(6, '6 Hari Terakhir', Icons.date_range_rounded),
-        _buildPopupMenuItem(5, '5 Hari Terakhir', Icons.date_range_rounded),
-        _buildPopupMenuItem(4, '4 Hari Terakhir', Icons.date_range_rounded),
-        _buildPopupMenuItem(3, '3 Hari Terakhir', Icons.date_range_rounded),
-        _buildPopupMenuItem(2, '2 Hari Terakhir', Icons.date_range_rounded),
-        _buildPopupMenuItem(1, '24 Jam Terakhir (Hari Ini)', Icons.today_rounded),
+        _buildPopupMenuItem(7, _formatRangeLabel(7), Icons.calendar_month_rounded),
+        _buildPopupMenuItem(6, _formatRangeLabel(6), Icons.date_range_rounded),
+        _buildPopupMenuItem(5, _formatRangeLabel(5), Icons.date_range_rounded),
+        _buildPopupMenuItem(4, _formatRangeLabel(4), Icons.date_range_rounded),
+        _buildPopupMenuItem(3, _formatRangeLabel(3), Icons.date_range_rounded),
+        _buildPopupMenuItem(2, _formatRangeLabel(2), Icons.date_range_rounded),
+        _buildPopupMenuItem(1, _formatRangeLabel(1), Icons.today_rounded),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -648,6 +648,20 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
         ],
       ),
     );
+  }
+
+  String _formatRangeLabel(int days) {
+    final now = DateTime.now();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    final endStr = '${now.day.toString().padLeft(2, '0')} ${months[now.month - 1]}';
+
+    if (days == 1) {
+      return 'Hari Ini ($endStr • 24 Jam)';
+    }
+
+    final start = now.subtract(Duration(days: days - 1));
+    final startStr = '${start.day.toString().padLeft(2, '0')} ${months[start.month - 1]}';
+    return '$days Hari Terakhir ($startStr – $endStr)';
   }
 }
 

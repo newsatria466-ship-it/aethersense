@@ -53,14 +53,23 @@ class MonitoringHistoryService extends ChangeNotifier {
     }
   }
 
-  /// Ambil data riwayat berdasarkan jumlah hari (1 s/d 7 hari)
+  /// Ambil data riwayat berdasarkan jumlah hari (1 s/d 7 hari kalender)
   List<MonitoringHistoryRecord> getRecordsForDays(int days) {
     if (_records.isEmpty) return [];
-    final cutoff = DateTime.now().subtract(Duration(days: days));
-    final filtered = _records.where((r) => r.timestamp.isAfter(cutoff)).toList();
+    final now = DateTime.now();
+    // Awal hari dari rentang (00:00:00 pada days-1 hari yang lalu)
+    final startOfRange = DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1));
+    final filtered = _records.where((r) => !r.timestamp.isBefore(startOfRange)).toList();
     // Urutkan kronologis dari paling lampau ke paling baru
     filtered.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    return filtered;
+    if (filtered.isNotEmpty) {
+      return filtered;
+    }
+    // Fallback
+    final cutoff = now.subtract(Duration(days: days));
+    final alt = _records.where((r) => r.timestamp.isAfter(cutoff)).toList();
+    alt.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return alt.isNotEmpty ? alt : _records;
   }
 
   /// Rekam data live telemetri setiap jam baru

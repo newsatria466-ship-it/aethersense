@@ -11,8 +11,8 @@ class MonitoringHistoryService extends ChangeNotifier {
 
   MonitoringHistoryService._internal();
 
-  static const String _storageKey = 'tegal_smart_monitoring_history_v1';
-  static const int maxHourlyRecords = 168; // 7 hari x 24 jam
+  static const String _storageKey = 'tegal_smart_monitoring_history_v2';
+  static const int maxHourlyRecords = 192; // 8 hari (Hari Ini + 7 hari lalu) x 24 jam
 
   final List<MonitoringHistoryRecord> _records = [];
   bool _isInitialized = false;
@@ -36,9 +36,8 @@ class MonitoringHistoryService extends ChangeNotifier {
         }
       }
 
-      // Jika data masih kosong atau kurang dari 24 jam (misal baru pertama dipasang),
-      // kita isi dengan data riwayat 7 hari terakhir yang realistis
-      if (_records.isEmpty) {
+      // Jika data masih kosong atau kurang dari 24 jam, isi data riwayat terstruktur
+      if (_records.length < 24) {
         _seedRealistic7DaysHistory();
         await _persist();
       }
@@ -53,23 +52,38 @@ class MonitoringHistoryService extends ChangeNotifier {
     }
   }
 
-  /// Ambil data riwayat berdasarkan jumlah hari (1 s/d 7 hari kalender)
-  List<MonitoringHistoryRecord> getRecordsForDays(int days) {
+  /// Ambil 24 titik data riwayat untuk 1 hari tertentu
+  /// dayOffset: 0 = Hari Ini, 1 = Kemarin, 2 = 2 Hari Lalu, ..., 7 = 7 Hari Lalu
+  List<MonitoringHistoryRecord> getRecordsForDayOffset(int dayOffset) {
     if (_records.isEmpty) return [];
     final now = DateTime.now();
-    // Awal hari dari rentang (00:00:00 pada days-1 hari yang lalu)
-    final startOfRange = DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1));
-    final filtered = _records.where((r) => !r.timestamp.isBefore(startOfRange)).toList();
-    // Urutkan kronologis dari paling lampau ke paling baru
+    final targetDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: dayOffset));
+
+    final filtered = _records.where((r) {
+      return r.timestamp.year == targetDate.year &&
+             r.timestamp.month == targetDate.month &&
+             r.timestamp.day == targetDate.day;
+    }).toList();
+
     filtered.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     if (filtered.isNotEmpty) {
       return filtered;
     }
-    // Fallback
-    final cutoff = now.subtract(Duration(days: days));
-    final alt = _records.where((r) => r.timestamp.isAfter(cutoff)).toList();
-    alt.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    return alt.isNotEmpty ? alt : _records;
+
+    // Fallback: jika tanggal exact belum ada, ambil jendela 24 data sesuai offset
+    final startIdx = max(0, _records.length - ((dayOffset + 1) * 24));
+    final endIdx = min(_records.length, startIdx + 24);
+    if (startIdx < endIdx) {
+      final sub = _records.sublist(startIdx, endIdx);
+      sub.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      return sub;
+    }
+    return _records.length <= 24 ? _records : _records.sublist(_records.length - 24);
+  }
+
+  /// Ambil data riwayat berdasarkan rentang hari (untuk backwards compatibility)
+  List<MonitoringHistoryRecord> getRecordsForDays(int days) {
+    return getRecordsForDayOffset(days <= 1 ? 0 : days - 1);
   }
 
   /// Rekam data live telemetri setiap jam baru
@@ -108,10 +122,10 @@ class MonitoringHistoryService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hapus data yang usianya lebih dari 7 hari atau melebihi 168 data (FIFO)
+  /// Hapus data yang usianya lebih dari 8 hari atau melebihi 192 data (FIFO)
   void _pruneOldRecords() {
-    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-    _records.removeWhere((r) => r.timestamp.isBefore(sevenDaysAgo));
+    final eightDaysAgo = DateTime.now().subtract(const Duration(days: 8));
+    _records.removeWhere((r) => r.timestamp.isBefore(eightDaysAgo));
     if (_records.length > maxHourlyRecords) {
       _records.removeRange(0, _records.length - maxHourlyRecords);
     }
@@ -127,64 +141,65 @@ class MonitoringHistoryService extends ChangeNotifier {
     }
   }
 
-  /// Mengisi data simulasi realistis 7 hari (168 titik jam)
+  /// Mengisi data simulasi realistis untuk 8 hari (Hari Ini + 7 hari ke belakang, masing-masing 24 jam)
   void _seedRealistic7DaysHistory() {
     _records.clear();
     final now = DateTime.now();
-    final rng = Random(42); // seed konsisten
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final rng = Random(42);
 
-    // 168 jam ke belakang
-    for (int i = 167; i >= 0; i--) {
-      final time = now.subtract(Duration(hours: i));
-      final hour = time.hour;
+    for (int dayOffset = 7; dayOffset >= 0; dayOffset--) {
+      final dayDate = todayStart.subtract(Duration(days: dayOffset));
+      for (int hour = 0; hour < 24; hour++) {
+        final time = DateTime(dayDate.year, dayDate.month, dayDate.day, hour);
 
-      // Suhu: lebih dingin malam/dini hari (25-27°C), lebih hangat siang (30-33°C)
-      double baseTemp = 28.5 + (sin((hour - 9) * pi / 12) * 3.5);
-      double temp = baseTemp + (rng.nextDouble() * 0.8 - 0.4);
+        // Suhu: 25-27°C malam, 30-33°C siang
+        double baseTemp = 28.5 + (sin((hour - 9) * pi / 12) * 3.5);
+        double temp = baseTemp + (rng.nextDouble() * 0.8 - 0.4);
 
-      // Kelembaban: berbanding terbalik dengan suhu (60-88%)
-      double baseHum = 75.0 - (sin((hour - 9) * pi / 12) * 12.0);
-      double hum = (baseHum + (rng.nextDouble() * 2.0 - 1.0)).clamp(50.0, 95.0);
+        // Kelembaban: 60-88%
+        double baseHum = 75.0 - (sin((hour - 9) * pi / 12) * 12.0);
+        double hum = (baseHum + (rng.nextDouble() * 2.0 - 1.0)).clamp(50.0, 95.0);
 
-      // Ketinggian genangan air: umumnya normal 8-14 cm
-      double water = 9.0 + (rng.nextDouble() * 4.0);
-      bool raining = false;
-      // Sesekali ada hujan ringan di sore/malam hari
-      if ((hour >= 15 && hour <= 18) && (i % 24 < 12) && rng.nextDouble() > 0.6) {
-        raining = true;
-        water += 4.5 + rng.nextDouble() * 3.0; // kenaikan air saat hujan
+        // Ketinggian genangan air: 8-14 cm
+        double water = 9.0 + (rng.nextDouble() * 4.0);
+        bool raining = false;
+        // Hujan di sore hari pada hari-hari tertentu
+        if ((hour >= 15 && hour <= 18) && ((dayOffset + hour) % 3 == 0) && rng.nextDouble() > 0.35) {
+          raining = true;
+          water += 4.5 + rng.nextDouble() * 3.5;
+        }
+
+        String floodStatus;
+        if (water < 20.0) {
+          floodStatus = 'Aman';
+        } else if (water < 35.0) {
+          floodStatus = 'Waspada';
+        } else {
+          floodStatus = 'Siaga';
+        }
+
+        int mqRaw = 300 + (rng.nextInt(250)) + (hour >= 7 && hour <= 17 ? 120 : 0);
+        String airStatus;
+        if (mqRaw < 350) {
+          airStatus = 'Sangat Bersih';
+        } else if (mqRaw < 1500) {
+          airStatus = 'Normal / Baik';
+        } else {
+          airStatus = 'Polusi Ringan';
+        }
+
+        _records.add(MonitoringHistoryRecord(
+          timestamp: time,
+          waterLevelCm: double.parse(water.toStringAsFixed(1)),
+          floodStatus: floodStatus,
+          temperatureC: double.parse(temp.toStringAsFixed(1)),
+          humidityPercent: double.parse(hum.toStringAsFixed(1)),
+          mq135Raw: mqRaw,
+          airQualityStatus: airStatus,
+          isRaining: raining,
+        ));
       }
-
-      String floodStatus;
-      if (water < 20.0) {
-        floodStatus = 'Aman';
-      } else if (water < 35.0) {
-        floodStatus = 'Waspada';
-      } else {
-        floodStatus = 'Siaga';
-      }
-
-      // MQ-135 kualitas udara: 250 - 600
-      int mqRaw = 300 + (rng.nextInt(250)) + (hour >= 7 && hour <= 17 ? 120 : 0);
-      String airStatus;
-      if (mqRaw < 350) {
-        airStatus = 'Sangat Bersih';
-      } else if (mqRaw < 1500) {
-        airStatus = 'Normal / Baik';
-      } else {
-        airStatus = 'Polusi Ringan';
-      }
-
-      _records.add(MonitoringHistoryRecord(
-        timestamp: time,
-        waterLevelCm: double.parse(water.toStringAsFixed(1)),
-        floodStatus: floodStatus,
-        temperatureC: double.parse(temp.toStringAsFixed(1)),
-        humidityPercent: double.parse(hum.toStringAsFixed(1)),
-        mq135Raw: mqRaw,
-        airQualityStatus: airStatus,
-        isRaining: raining,
-      ));
     }
   }
 

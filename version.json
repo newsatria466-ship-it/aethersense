@@ -1,6 +1,6 @@
 {
-  "version": "1.0.12",
-  "versionCode": 13,
-  "changelog": "• Penyempurnaan Riwayat Data: Penyesuaian rentang tanggal kalender asli secara dinamis (contoh: 3 Hari Terakhir 04 Okt – 06 Okt 2026)\n• Tampilan Rekap Data Per Hari (Day-by-Day): Data dikelompokkan rapi per tanggal kalender dengan ringkasan harian (Min, Max, Avg, Status Cuaca/Hujan)\n• Kartu Harian Interaktif & Expandable: Dapat membuka/menutup log 24 jam untuk tiap hari secara mandiri atau sekaligus (Buka/Tutup Semua)\n• Penanda Tanggal pada Grafik: Penanda tanggal/hari di sepanjang sumbu X grafik interaktif\n• Khusus Smart Monitoring: Melacak Ketinggian Air/Banjir, Suhu, Kelembaban, Kualitas Udara (MQ-135), dan Hujan",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.12/app-release.apk"
+  "version": "1.0.13",
+  "versionCode": 14,
+  "changelog": "• Penyempurnaan Tampilan Riwayat (Kembali ke Desain Bersih & Elegan v1.0.11): Tata letak kembali rapi, tidak padat, dan nyaman dilihat\n• Pemilihan Hari Tunggal (Single-Day Focus): Memilih hari tertentu (Hari Ini s/d 7 Hari Lalu) akan menampilkan 24 data per jam khusus pada hari tersebut saja\n• Grafik & Rekap 24 Jam Akurat: Fluktuasi jam 00:00 - 23:00, nilai Tertinggi, Terendah, Rata-rata, serta log per jam terperinci\n• Pilihan Tanggal Kalender Nyata: Pilihan dropdown menampilkan nama hari dan tanggal kalender asli secara dinamis",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.13/app-release.apk"
 }

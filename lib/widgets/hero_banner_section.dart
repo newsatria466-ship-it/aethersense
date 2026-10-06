@@ -567,17 +567,18 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
       color: widget.isDarkMode ? const Color(0xFF1E293B) : Colors.white,
       elevation: 8,
       offset: const Offset(0, 42),
-      onSelected: (days) {
-        MonitoringHistoryModal.show(context, initialDays: days);
+      onSelected: (offset) {
+        MonitoringHistoryModal.show(context, initialDayOffset: offset);
       },
       itemBuilder: (ctx) => [
-        _buildPopupMenuItem(7, _formatRangeLabel(7), Icons.calendar_month_rounded),
-        _buildPopupMenuItem(6, _formatRangeLabel(6), Icons.date_range_rounded),
-        _buildPopupMenuItem(5, _formatRangeLabel(5), Icons.date_range_rounded),
-        _buildPopupMenuItem(4, _formatRangeLabel(4), Icons.date_range_rounded),
-        _buildPopupMenuItem(3, _formatRangeLabel(3), Icons.date_range_rounded),
-        _buildPopupMenuItem(2, _formatRangeLabel(2), Icons.date_range_rounded),
-        _buildPopupMenuItem(1, _formatRangeLabel(1), Icons.today_rounded),
+        _buildPopupMenuItem(0, _formatDayMenuLabel(0), Icons.today_rounded),
+        _buildPopupMenuItem(1, _formatDayMenuLabel(1), Icons.event_rounded),
+        _buildPopupMenuItem(2, _formatDayMenuLabel(2), Icons.event_rounded),
+        _buildPopupMenuItem(3, _formatDayMenuLabel(3), Icons.event_rounded),
+        _buildPopupMenuItem(4, _formatDayMenuLabel(4), Icons.event_rounded),
+        _buildPopupMenuItem(5, _formatDayMenuLabel(5), Icons.event_rounded),
+        _buildPopupMenuItem(6, _formatDayMenuLabel(6), Icons.event_rounded),
+        _buildPopupMenuItem(7, _formatDayMenuLabel(7), Icons.calendar_month_rounded),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -626,9 +627,9 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
     );
   }
 
-  PopupMenuItem<int> _buildPopupMenuItem(int days, String label, IconData icon) {
+  PopupMenuItem<int> _buildPopupMenuItem(int offset, String label, IconData icon) {
     return PopupMenuItem<int>(
-      value: days,
+      value: offset,
       child: Row(
         children: [
           Icon(
@@ -641,7 +642,7 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
             label,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
-              fontWeight: days == 7 ? FontWeight.w800 : FontWeight.w600,
+              fontWeight: offset == 0 ? FontWeight.w800 : FontWeight.w600,
               color: widget.isDarkMode ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
@@ -650,18 +651,19 @@ class _HeroBannerSectionState extends State<HeroBannerSection> {
     );
   }
 
-  String _formatRangeLabel(int days) {
+  String _formatDayMenuLabel(int offset) {
     final now = DateTime.now();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    final endStr = '${now.day.toString().padLeft(2, '0')} ${months[now.month - 1]}';
+    final target = DateTime(now.year, now.month, now.day).subtract(Duration(days: offset));
+    final dateStr = '${target.day.toString().padLeft(2, '0')} ${months[target.month - 1]}';
 
-    if (days == 1) {
-      return 'Hari Ini ($endStr • 24 Jam)';
+    if (offset == 0) {
+      return 'Hari Ini ($dateStr)';
+    } else if (offset == 1) {
+      return 'Kemarin ($dateStr)';
+    } else {
+      return '$offset Hari Lalu ($dateStr)';
     }
-
-    final start = now.subtract(Duration(days: days - 1));
-    final startStr = '${start.day.toString().padLeft(2, '0')} ${months[start.month - 1]}';
-    return '$days Hari Terakhir ($startStr – $endStr)';
   }
 }
 

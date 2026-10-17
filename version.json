@@ -1,6 +1,6 @@
 {
-  "version": "1.0.13",
-  "versionCode": 14,
-  "changelog": "• Penyempurnaan Tampilan Riwayat (Kembali ke Desain Bersih & Elegan v1.0.11): Tata letak kembali rapi, tidak padat, dan nyaman dilihat\n• Pemilihan Hari Tunggal (Single-Day Focus): Memilih hari tertentu (Hari Ini s/d 7 Hari Lalu) akan menampilkan 24 data per jam khusus pada hari tersebut saja\n• Grafik & Rekap 24 Jam Akurat: Fluktuasi jam 00:00 - 23:00, nilai Tertinggi, Terendah, Rata-rata, serta log per jam terperinci\n• Pilihan Tanggal Kalender Nyata: Pilihan dropdown menampilkan nama hari dan tanggal kalender asli secara dinamis",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.13/app-release.apk"
+  "version": "1.0.16",
+  "versionCode": 17,
+  "changelog": "• Pemulihan Tampilan Dashboard Stabil (Kembali ke Desain v1.0.13)\n• Perbaikan Kotak Dialog Pembaruan: Catatan perubahan kini dilengkapi scroll dinamis sehingga tombol update tidak akan tenggelam dan selalu mudah ditekan",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.16/app-release.apk"
 }

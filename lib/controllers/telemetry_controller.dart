@@ -33,7 +33,9 @@ class TelemetryController extends ChangeNotifier {
 
   // Getters
   MqttConnectionStateStatus get connectionStatus => _connectionStatus;
+  bool get isConnected => _connectionStatus == MqttConnectionStateStatus.connected;
   TelemetryData? get telemetry => _latestTelemetry;
+  TelemetryData? get latestTelemetry => _latestTelemetry;
   Map<String, TelemetryData> get devices => Map.unmodifiable(_devices);
   String? get activeDeviceId => _activeDeviceId ?? _latestTelemetry?.deviceId;
   bool get hasData => _latestTelemetry != null;

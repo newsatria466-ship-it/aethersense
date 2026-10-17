@@ -45,14 +45,16 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "smart_city_tegal");
+    gtk_header_bar_set_title(header_bar, "Smart City Tegal");
+    gtk_header_bar_set_subtitle(header_bar, "Mobile View (412x892)");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "smart_city_tegal");
+    gtk_window_set_title(window, "Smart City Tegal — Mobile View");
   }
 
-  gtk_window_set_default_size(window, 1280, 720);
+  // Ukuran layar smartphone modern (412 x 892 px)
+  gtk_window_set_default_size(window, 412, 892);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(

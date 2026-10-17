@@ -161,23 +161,34 @@ class MqttService {
 
   void _handleIncomingPayload(String topic, String payload) {
     try {
-      final dynamic decoded = jsonDecode(payload);
-      if (decoded is! Map<String, dynamic>) {
-        if (kDebugMode) {
-          print('[AetherSense][JSON][ERROR] Payload is not a JSON object: $payload');
+      final trimmed = payload.trim();
+      Map<String, dynamic> enrichedData;
+
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        final dynamic decoded = jsonDecode(trimmed);
+        if (decoded is! Map<String, dynamic>) {
+          if (kDebugMode) {
+            print('[AetherSense][JSON][ERROR] Payload is not a JSON object: $payload');
+          }
+          return;
         }
-        return;
+        enrichedData = Map.from(decoded);
+      } else {
+        // Plain-text payload (misal ESP32 LWT Last Will: "offline" / "online")
+        enrichedData = {
+          'status': trimmed,
+          'online': trimmed.toLowerCase() == 'online',
+        };
       }
 
-      // Extract device_id from topic if not present in JSON
-      // Topic structure: aethersense/{deviceId}/telemetry
+      // Extract device_id from topic if not present in payload
+      // Topic structure: aethersense/{deviceId}/telemetry or /status
       String? topicDeviceId;
       final segments = topic.split('/');
       if (segments.length >= 2) {
         topicDeviceId = segments[1];
       }
 
-      final Map<String, dynamic> enrichedData = Map.from(decoded);
       if (!enrichedData.containsKey('device_id') && topicDeviceId != null) {
         enrichedData['device_id'] = topicDeviceId;
       }

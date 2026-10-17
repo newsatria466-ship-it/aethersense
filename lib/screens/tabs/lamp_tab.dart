@@ -1,523 +1,395 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/telemetry_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/pressable_scale.dart';
 
-class LampTab extends StatelessWidget {
+class LampTab extends StatefulWidget {
   const LampTab({super.key});
 
   @override
+  State<LampTab> createState() => _LampTabState();
+}
+
+class _LampTabState extends State<LampTab> {
+  int _selectedSegment = 0; // 0: Kontrol, 1: Jadwal
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<TelemetryController>(
       builder: (context, controller, child) {
         final isOnline = controller.isConnected;
-        final isDelayed = controller.isTelemetryDelayed;
         final isAuto = controller.isAutoMode;
         final activeCount = controller.activeRelayCount;
-        final ldrRaw = controller.latestTelemetry?.ldrRaw ?? 0;
-        final ambient = controller.latestTelemetry?.ambientLight ?? 'Normal';
-        final isDark = controller.isDark;
+        final isMasterActive = activeCount > 0;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: SafeArea(
             bottom: false,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // Header
+                // 1. Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacings.m,
-                      AppSpacings.m,
-                      AppSpacings.m,
-                      AppSpacings.s,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.cyan.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.lightbulb_rounded,
-                                        color: AppColors.cyan,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Smart Public Lighting',
-                                      style: AppTextStyles.h2.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Penerangan Jalan Umum & Taman Kota',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Active lights pill badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: activeCount > 0
-                                    ? AppColors.green.withValues(alpha: 0.12)
-                                    : AppColors.surface,
-                                borderRadius: BorderRadius.circular(AppRadii.pill),
-                                border: Border.all(
-                                  color: activeCount > 0
-                                      ? AppColors.green.withValues(alpha: 0.3)
-                                      : AppColors.border,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 7,
-                                    height: 7,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: activeCount > 0 ? AppColors.green : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '$activeCount / 4 Aktif',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: activeCount > 0 ? AppColors.green : AppColors.textSecondary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'PJU Lampu',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
                         ),
-
-                        // Offline banner
-                        if (!isOnline) ...[
-                          const SizedBox(height: AppSpacings.m),
-                          _buildNoticeBanner(
-                            icon: Icons.cloud_off_rounded,
-                            title: 'Status: Mikrokontroler Offline',
-                            message: 'Kontrol relay dan sensor LDR dinonaktifkan sementara.',
-                            color: AppColors.warning,
+                        // Connection dot indicator
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (isOnline ? AppColors.green : AppColors.warning).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ] else if (isDelayed) ...[
-                          const SizedBox(height: AppSpacings.m),
-                          _buildNoticeBanner(
-                            icon: Icons.timer_outlined,
-                            title: 'Telemetri Tertunda',
-                            message: 'Status relay terakhir: ${controller.freshnessText}',
-                            color: AppColors.textSecondary,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isOnline ? AppColors.green : AppColors.warning,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                isOnline ? 'Online' : 'Offline',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: isOnline ? AppColors.green : AppColors.warning,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
                 ),
 
-                // Lighting Mode Selector (Otomatis vs Manual)
+                // 2. Top Master Card: Big bulb, "Penerangan Kota: Aktif", "4 zona menyala", Master Switch
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacings.m,
-                      vertical: AppSpacings.s,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Container(
-                      padding: const EdgeInsets.all(AppSpacings.m),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadii.card),
-                        border: Border.all(color: AppColors.border),
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Mode Operasi Sistem',
-                                style: AppTextStyles.bodyBold.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              if (controller.isPendingModeChange)
-                                const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.cyan,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppColors.background,
-                              borderRadius: BorderRadius.circular(AppRadii.sm),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildModeButton(
-                                    title: 'Otomatis (LDR)',
-                                    subtitle: 'Sensor Cahaya',
-                                    icon: Icons.brightness_auto_rounded,
-                                    isSelected: isAuto,
-                                    onTap: isOnline && !controller.isPendingModeChange
-                                        ? () => controller.setLightingMode('auto')
-                                        : null,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: _buildModeButton(
-                                    title: 'Manual (Operator)',
-                                    subtitle: 'Kontrol Mandiri',
-                                    icon: Icons.touch_app_rounded,
-                                    isSelected: !isAuto,
-                                    onTap: isOnline && !controller.isPendingModeChange
-                                        ? () => controller.setLightingMode('manual')
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            isAuto
-                                ? 'Lampu akan menyala otomatis saat sensor LDR mendeteksi kondisi gelap/malam dan padam saat siang.'
-                                : 'Lampu dikontrol secara manual oleh operator. Mengubah sakelar di bawah akan otomatis mengaktifkan mode manual.',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: 11,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // LDR Ambient Light Sensor Card
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacings.m,
-                      vertical: AppSpacings.s,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacings.m),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadii.card),
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: Row(
                         children: [
+                          // Yellow bulb container
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
-                              color: (isDark ? AppColors.warning : AppColors.cyan)
-                                  .withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
+                              color: isMasterActive
+                                  ? Colors.amber.withValues(alpha: 0.18)
+                                  : AppColors.cyan.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Icon(
-                              isDark ? Icons.nights_stay_rounded : Icons.wb_sunny_rounded,
-                              size: 24,
-                              color: isDark ? AppColors.warning : AppColors.cyan,
+                              Icons.lightbulb_rounded,
+                              size: 28,
+                              color: isMasterActive ? Colors.amber.shade700 : AppColors.cyan,
                             ),
                           ),
                           const SizedBox(width: 14),
+
+                          // Text Info
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Sensor Cahaya LDR',
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 7,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: (isDark ? AppColors.warning : AppColors.green)
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        isDark ? 'GELAP' : 'TERANG',
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: isDark ? AppColors.warning : AppColors.green,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  'Penerangan Kota',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Text(
-                                      ambient,
-                                      style: AppTextStyles.bodyBold.copyWith(
-                                        fontSize: 15,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'ADC: $ldrRaw / 4095',
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  isMasterActive ? 'Aktif' : 'Padam',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: isMasterActive
+                                        ? AppColors.green
+                                        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                                  ),
+                                ),
+                                Text(
+                                  '$activeCount zona menyala',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
+
+                          // Master Toggle Switch
+                          if (controller.isRelayPending('all'))
+                            const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.green,
+                              ),
+                            )
+                          else
+                            Switch(
+                              value: isMasterActive,
+                              activeThumbColor: AppColors.green,
+                              activeTrackColor: AppColors.green.withValues(alpha: 0.35),
+                              inactiveThumbColor: AppColors.textSecondary.withValues(alpha: 0.6),
+                              inactiveTrackColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                              onChanged: isOnline
+                                  ? (val) => controller.sendRelayCommand(relay: 'all', state: val)
+                                  : null,
+                            ),
                         ],
                       ),
                     ),
                   ),
                 ),
 
-                // Master Lighting Controls
+                // 3. Segmented Tabs: "Kontrol", "Jadwal"
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacings.m,
-                      vertical: AppSpacings.s,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildSegmentItem(0, 'Kontrol'),
+                          _buildSegmentItem(1, 'Jadwal'),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: PressableScale(
-                            onTap: isOnline && !controller.isRelayPending('all')
-                                ? () => controller.sendRelayCommand(relay: 'all', state: true)
+                  ),
+                ),
+
+                // 4. Tab Content: 4 Zones List (Kontrol) or Schedules
+                if (_selectedSegment == 0) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          // Zona 1: Jalan Utama (Relay 1)
+                          _buildZoneItem(
+                            zoneTitle: 'Zona 1',
+                            zoneSubtitle: 'Jalan Utama',
+                            icon: Icons.alt_route_rounded,
+                            isOn: controller.relay1,
+                            isPending: controller.isRelayPending(1),
+                            isOnline: isOnline,
+                            isDark: isDark,
+                            onToggle: (state) => controller.sendRelayCommand(relay: 1, state: state),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Zona 2: Area Taman (Relay 2)
+                          _buildZoneItem(
+                            zoneTitle: 'Zona 2',
+                            zoneSubtitle: 'Area Taman',
+                            icon: Icons.park_rounded,
+                            isOn: controller.relay2,
+                            isPending: controller.isRelayPending(2),
+                            isOnline: isOnline,
+                            isDark: isDark,
+                            onToggle: (state) => controller.sendRelayCommand(relay: 2, state: state),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Zona 3: Kawasan Barat (Relay 3)
+                          _buildZoneItem(
+                            zoneTitle: 'Zona 3',
+                            zoneSubtitle: 'Kawasan Barat',
+                            icon: Icons.apartment_rounded,
+                            isOn: controller.relay3,
+                            isPending: controller.isRelayPending(3),
+                            isOnline: isOnline,
+                            isDark: isDark,
+                            onToggle: (state) => controller.sendRelayCommand(relay: 3, state: state),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Zona 4: Kawasan Timur (Relay 4)
+                          _buildZoneItem(
+                            zoneTitle: 'Zona 4',
+                            zoneSubtitle: 'Kawasan Timur',
+                            icon: Icons.location_city_rounded,
+                            isOn: controller.relay4,
+                            isPending: controller.isRelayPending(4),
+                            isOnline: isOnline,
+                            isDark: isDark,
+                            onToggle: (state) => controller.sendRelayCommand(relay: 4, state: state),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Bottom Card: Mode Otomatis (LDR Sensor)
+                          PressableScale(
+                            onTap: isOnline
+                                ? () => controller.setLightingMode(isAuto ? 'manual' : 'auto')
                                 : null,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppColors.cyan,
-                                borderRadius: BorderRadius.circular(AppRadii.sm),
+                                color: isDark ? AppColors.surfaceDark : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isAuto
+                                      ? AppColors.green.withValues(alpha: 0.4)
+                                      : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.cyan.withValues(alpha: 0.3),
+                                    color: Colors.black.withValues(alpha: 0.02),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (controller.isRelayPending('all'))
-                                    const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  else
-                                    const Icon(
-                                      Icons.flash_on_rounded,
-                                      size: 16,
-                                      color: Colors.white,
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: (isAuto ? AppColors.green : AppColors.cyan).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Nyalakan Semua',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
+                                    child: Icon(
+                                      Icons.brightness_auto_rounded,
+                                      color: isAuto ? AppColors.green : AppColors.cyan,
+                                      size: 20,
                                     ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Mode Otomatis',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                          ),
+                                        ),
+                                        Text(
+                                          isAuto
+                                              ? 'Aktif • Lampu menyala saat gelap (LDR)'
+                                              : 'Nonaktif • Lampu dalam mode manual',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            color: isAuto
+                                                ? AppColors.green
+                                                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                    size: 20,
                                   ),
                                 ],
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  // Jadwal view
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.surfaceDark : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: PressableScale(
-                            onTap: isOnline && !controller.isRelayPending('all')
-                                ? () => controller.sendRelayCommand(relay: 'all', state: false)
-                                : null,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(AppRadii.sm),
-                                border: Border.all(color: AppColors.border),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.flash_off_rounded,
-                                    size: 16,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Matikan Semua',
-                                    style: AppTextStyles.bodyBold.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
+                        child: Column(
+                          children: [
+                            const Icon(Icons.schedule_rounded, size: 40, color: AppColors.cyan),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Otomasi Jadwal Nyala & Padam',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Penerangan umum diatur otomatis menyala pukul 17:45 WIB dan padam pukul 05:30 WIB sesuai sensor LDR Alun-Alun Tegal.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11.5,
+                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                ],
 
-                // Individual Lamp Relays (4 Relays)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacings.m,
-                      AppSpacings.s,
-                      AppSpacings.m,
-                      AppSpacings.xxl * 2, // Space for bottom bar
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Kendali Lampu Individu',
-                          style: AppTextStyles.bodyBold.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Relay 1: PJU Jalur Utama
-                        _buildRelayCard(
-                          relayIndex: 1,
-                          name: 'PJU Jalur Utama',
-                          location: 'Jl. Pemuda / Depan Alun-Alun',
-                          icon: Icons.alt_route_rounded,
-                          isOn: controller.relay1,
-                          isPending: controller.isRelayPending(1),
-                          isOnline: isOnline,
-                          onToggle: (state) => controller.sendRelayCommand(relay: 1, state: state),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Relay 2: PJU Jalur Pedestrian
-                        _buildRelayCard(
-                          relayIndex: 2,
-                          name: 'PJU Jalur Pedestrian',
-                          location: 'Trotoar & Jalur Ramah Pejalan',
-                          icon: Icons.directions_walk_rounded,
-                          isOn: controller.relay2,
-                          isPending: controller.isRelayPending(2),
-                          isOnline: isOnline,
-                          onToggle: (state) => controller.sendRelayCommand(relay: 2, state: state),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Relay 3: Taman Timur
-                        _buildRelayCard(
-                          relayIndex: 3,
-                          name: 'Lampu Taman Sisi Timur',
-                          location: 'Area Taman Bunga & Gazebo',
-                          icon: Icons.park_rounded,
-                          isOn: controller.relay3,
-                          isPending: controller.isRelayPending(3),
-                          isOnline: isOnline,
-                          onToggle: (state) => controller.sendRelayCommand(relay: 3, state: state),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Relay 4: Taman Barat
-                        _buildRelayCard(
-                          relayIndex: 4,
-                          name: 'Lampu Taman Sisi Barat',
-                          location: 'Area Air Mancur & Monumen',
-                          icon: Icons.yard_rounded,
-                          isOn: controller.relay4,
-                          isPending: controller.isRelayPending(4),
-                          isOnline: isOnline,
-                          onToggle: (state) => controller.sendRelayCommand(relay: 4, state: state),
-                        ),
-                      ],
-                    ),
-                  ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 110),
                 ),
               ],
             ),
@@ -527,93 +399,72 @@ class LampTab extends StatelessWidget {
     );
   }
 
-  Widget _buildModeButton({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback? onTap,
-  }) {
-    return PressableScale(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadii.sm),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? AppColors.cyan : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+  Widget _buildSegmentItem(int index, String label) {
+    final isSelected = _selectedSegment == index;
+    return Expanded(
+      child: PressableScale(
+        onTap: () {
+          setState(() {
+            _selectedSegment = index;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.cyan : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.cyan.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isSelected ? AppColors.cyan : AppColors.textSecondary.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? Colors.white
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildRelayCard({
-    required int relayIndex,
-    required String name,
-    required String location,
+  Widget _buildZoneItem({
+    required String zoneTitle,
+    required String zoneSubtitle,
     required IconData icon,
     required bool isOn,
     required bool isPending,
     required bool isOnline,
+    required bool isDark,
     required ValueChanged<bool> onToggle,
   }) {
-    final activeColor = isOn ? AppColors.cyan : AppColors.textSecondary;
-
     return Container(
-      padding: const EdgeInsets.all(AppSpacings.m),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadii.card),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isOn ? AppColors.cyan.withValues(alpha: 0.35) : AppColors.border,
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
         ),
         boxShadow: [
           BoxShadow(
-            color: isOn
-                ? AppColors.cyan.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -621,62 +472,40 @@ class LampTab extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon
+          // Icon Container
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: isOn
-                  ? AppColors.cyan.withValues(alpha: 0.12)
-                  : AppColors.background,
-              borderRadius: BorderRadius.circular(AppRadii.sm),
+              color: (isOn ? AppColors.green : AppColors.cyan).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
               size: 20,
-              color: activeColor,
+              color: isOn ? AppColors.green : AppColors.cyan,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
-          // Name and info
+          // Title & Subtitle
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      name,
-                      style: AppTextStyles.bodyBold.copyWith(
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Text(
-                        'R$relayIndex',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
                 Text(
-                  location,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                  zoneTitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                ),
+                Text(
+                  zoneSubtitle,
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                 ),
               ],
@@ -686,65 +515,22 @@ class LampTab extends StatelessWidget {
           // Pending spinner or Switch
           if (isPending)
             const SizedBox(
-              width: 24,
-              height: 24,
+              width: 22,
+              height: 22,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.cyan,
+                color: AppColors.green,
               ),
             )
           else
             Switch(
               value: isOn,
-              activeThumbColor: AppColors.cyan,
-              activeTrackColor: AppColors.cyan.withValues(alpha: 0.35),
+              activeThumbColor: AppColors.green,
+              activeTrackColor: AppColors.green.withValues(alpha: 0.35),
               inactiveThumbColor: AppColors.textSecondary.withValues(alpha: 0.6),
-              inactiveTrackColor: AppColors.background,
-              onChanged: isOnline ? (value) => onToggle(value) : null,
+              inactiveTrackColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+              onChanged: isOnline ? (val) => onToggle(val) : null,
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoticeBanner({
-    required IconData icon,
-    required String title,
-    required String message,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacings.m),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.bodyBold.copyWith(
-                    color: color,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  message,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

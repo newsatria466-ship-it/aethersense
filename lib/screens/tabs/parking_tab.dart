@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/telemetry_controller.dart';
 import '../../theme/app_theme.dart';
@@ -9,359 +10,289 @@ class ParkingTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<TelemetryController>(
       builder: (context, controller, child) {
         final total = controller.parkingTotalSlots;
         final occupied = controller.parkingOccupiedSlots;
         final available = controller.parkingAvailableSlots;
-        final isFull = controller.isParkingFull;
         final isOnline = controller.isConnected;
-        final isDelayed = controller.isTelemetryDelayed;
+        final percentAvailable = ((available / (total == 0 ? 1 : total)) * 100).toInt();
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: SafeArea(
             bottom: false,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // Header
+                // 1. Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacings.m,
-                      AppSpacings.m,
-                      AppSpacings.m,
-                      AppSpacings.s,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        Text(
+                          'Smart Parking',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                        ),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.cyan.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.local_parking_rounded,
-                                        color: AppColors.cyan,
-                                        size: 20,
-                                      ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: (isOnline ? AppColors.green : AppColors.warning).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isOnline ? AppColors.green : AppColors.warning,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Smart Parking',
-                                      style: AppTextStyles.h2.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Kawasan Alun-Alun Tegal',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    isOnline ? 'Online' : 'Offline',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: isOnline ? AppColors.green : AppColors.warning,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-
+                            const SizedBox(width: 8),
                             // Reset button
                             PressableScale(
                               onTap: controller.isResettingParking
                                   ? null
                                   : () => _confirmReset(context, controller),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                                  border: Border.all(color: AppColors.border),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.03),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: controller.isResettingParking
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: AppColors.cyan,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.refresh_rounded,
-                                            size: 15,
-                                            color: AppColors.cyan,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'Reset Kuota',
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: AppColors.textPrimary,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.surfaceDark : Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isDark ? AppColors.borderDark : AppColors.borderLight,
                               ),
                             ),
-                          ],
-                        ),
-
-                        // Offline / delay warning banner
-                        if (!isOnline) ...[
-                          const SizedBox(height: AppSpacings.m),
-                          _buildNoticeBanner(
-                            icon: Icons.cloud_off_rounded,
-                            title: 'Status: Sensor Offline',
-                            message: 'Menunggu koneksi MQTT broker untuk data slot teranyar.',
-                            color: AppColors.warning,
-                          ),
-                        ] else if (isDelayed) ...[
-                          const SizedBox(height: AppSpacings.m),
-                          _buildNoticeBanner(
-                            icon: Icons.timer_outlined,
-                            title: 'Telemetri Tertunda',
-                            message: 'Data parkir terakhir: ${controller.freshnessText}',
-                            color: AppColors.textSecondary,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Occupancy Summary Cards
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacings.m,
-                      vertical: AppSpacings.s,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            label: 'Tersedia',
-                            value: '$available',
-                            unit: 'Slot',
-                            icon: Icons.check_circle_outline_rounded,
-                            accentColor: isFull ? AppColors.textSecondary : AppColors.green,
-                            subtitle: isFull ? 'Parkir Penuh' : 'Siap Digunakan',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildMetricCard(
-                            label: 'Terisi',
-                            value: '$occupied',
-                            unit: 'Slot',
-                            icon: Icons.directions_car_filled_rounded,
-                            accentColor: occupied > 7 ? AppColors.danger : AppColors.cyan,
-                            subtitle: 'Dari total $total slot',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildMetricCard(
-                            label: 'Kapasitas',
-                            value: '$total',
-                            unit: 'Total',
-                            icon: Icons.grid_view_rounded,
-                            accentColor: AppColors.textPrimary,
-                            subtitle: '${((occupied / (total == 0 ? 1 : total)) * 100).toInt()}% Utilisasi',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Gate & Barrier Status Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacings.m,
-                      vertical: AppSpacings.s,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacings.m),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadii.card),
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.sensor_door_outlined,
-                                size: 18,
-                                color: AppColors.cyan,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Status Palang Otomatis (Servo)',
-                                style: AppTextStyles.bodyBold.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacings.m),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildGateIndicator(
-                                  title: 'Palang Masuk',
-                                  isOpen: controller.isEntryGateOpen,
-                                  isIrActive: controller.isIrEntryDetected,
-                                  icon: Icons.login_rounded,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildGateIndicator(
-                                  title: 'Palang Keluar',
-                                  isOpen: controller.isExitGateOpen,
-                                  isIrActive: controller.isIrExitDetected,
-                                  icon: Icons.logout_rounded,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Visual Slot Grid (10 Slots)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacings.m,
-                      vertical: AppSpacings.s,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacings.m),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadii.card),
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Denah Slot Parkir (1-10)',
-                                style: AppTextStyles.bodyBold.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  _buildLegendItem(AppColors.green, 'Kosong'),
-                                  const SizedBox(width: 12),
-                                  _buildLegendItem(AppColors.danger, 'Terisi'),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacings.m),
-
-                          // Parking Layout (2 Rows of 5)
-                          Column(
-                            children: [
-                              Row(
-                                children: List.generate(5, (index) {
-                                  final slotNum = index + 1;
-                                  final isSlotOccupied = slotNum <= occupied;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                                      child: _buildSlotCell(slotNum, isSlotOccupied),
-                                    ),
-                                  );
-                                }),
-                              ),
-                              const SizedBox(height: 12),
-                              // Driveway / Jalur Manuver
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '◄ ─── JALUR AKSES KENDARAAN ─── ►',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 10,
-                                      letterSpacing: 1.2,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.refresh_rounded, size: 14, color: AppColors.cyan),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Reset',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.cyan,
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+                // 2. Top Summary Card: "7 / 10 Slot Tersedia", "70%" badge matching Mockup Screen 4
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.025),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Blue Car Icon Container
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: AppColors.cyan.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.directions_car_filled_rounded,
+                              size: 24,
+                              color: AppColors.cyan,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+
+                          // Text Summary
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$available / $total',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                  ),
+                                ),
+                                Text(
+                                  'Slot Tersedia',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Percentage Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.green.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$percentAvailable%',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.green,
                               ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: List.generate(5, (index) {
-                                  final slotNum = index + 6;
-                                  final isSlotOccupied = slotNum <= occupied;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                                      child: _buildSlotCell(slotNum, isSlotOccupied),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 3. Illustrated Visual Parking Lot Layout (P1 to P10)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // Top Row (P1 - P5)
+                          Row(
+                            children: List.generate(5, (index) {
+                              final slotNum = index + 1;
+                              final isOccupied = slotNum <= occupied;
+                              return Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                                  child: _buildParkingSlot(
+                                    slotName: 'P$slotNum',
+                                    isOccupied: isOccupied,
+                                    isDark: isDark,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Middle Road / Jalur Akses Kendaraan
+                          Container(
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0F1A24) : const Color(0xFFEEF2F6),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '◄   JALUR MASUK & KELUAR   ►',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.0,
+                                      color: isDark ? AppColors.textSecondaryDark : const Color(0xFF8C9BA8),
                                     ),
-                                  );
-                                }),
+                                  ),
+                                ],
                               ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Bottom Row (P6 - P10)
+                          Row(
+                            children: List.generate(5, (index) {
+                              final slotNum = index + 6;
+                              final isOccupied = slotNum <= occupied;
+                              return Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                                  child: _buildParkingSlot(
+                                    slotName: 'P$slotNum',
+                                    isOccupied: isOccupied,
+                                    isDark: isDark,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Legend: Tersedia (Green), Terisi (Red), Tidak Aktif (Grey)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildLegendItem(AppColors.green, 'Tersedia'),
+                              const SizedBox(width: 16),
+                              _buildLegendItem(AppColors.danger, 'Terisi'),
+                              const SizedBox(width: 16),
+                              _buildLegendItem(const Color(0xFF9E9E9E), 'Tidak Aktif'),
                             ],
                           ),
                         ],
@@ -370,44 +301,34 @@ class ParkingTab extends StatelessWidget {
                   ),
                 ),
 
-                // Note info card
+                // 4. Bottom Gate Action Cards (Gerbang Masuk & Keluar)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacings.m,
-                      AppSpacings.s,
-                      AppSpacings.m,
-                      AppSpacings.xxl * 2, // Space for bottom bar
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacings.m),
-                      decoration: BoxDecoration(
-                        color: AppColors.cyan.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(AppRadii.card),
-                        border: Border.all(color: AppColors.cyan.withValues(alpha: 0.15)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.info_outline_rounded,
-                            size: 18,
-                            color: AppColors.cyan,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Sistem mendeteksi kendaraan secara real-time via sensor inframerah & portal gerbang otomatis Alun-Alun Tegal. Kuota dapat diatur ulang dari tombol reset di atas.',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textPrimary,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        _buildGateCard(
+                          title: 'Gerbang Masuk',
+                          status: controller.isEntryGateOpen ? 'Terbuka' : 'Tertutup',
+                          isOpen: controller.isEntryGateOpen,
+                          isIrActive: controller.isIrEntryDetected,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildGateCard(
+                          title: 'Gerbang Keluar',
+                          status: controller.isExitGateOpen ? 'Terbuka' : 'Tertutup',
+                          isOpen: controller.isExitGateOpen,
+                          isIrActive: controller.isIrExitDetected,
+                          isDark: isDark,
+                        ),
+                      ],
                     ),
                   ),
+                ),
+
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 110),
                 ),
               ],
             ),
@@ -417,169 +338,20 @@ class ParkingTab extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricCard({
-    required String label,
-    required String value,
-    required String unit,
-    required IconData icon,
-    required Color accentColor,
-    required String subtitle,
+  Widget _buildParkingSlot({
+    required String slotName,
+    required bool isOccupied,
+    required bool isDark,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacings.m),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: accentColor),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                value,
-                style: AppTextStyles.h2.copyWith(
-                  color: accentColor,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                unit,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 10,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
+    final statusColor = isOccupied ? AppColors.danger : AppColors.green;
 
-  Widget _buildGateIndicator({
-    required String title,
-    required bool isOpen,
-    required bool isIrActive,
-    required IconData icon,
-  }) {
-    final statusColor = isOpen ? AppColors.green : AppColors.textSecondary;
     return Container(
-      padding: const EdgeInsets.all(12),
+      height: 78,
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppRadii.sm),
+        color: statusColor.withValues(alpha: isDark ? 0.15 : 0.08),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isOpen ? AppColors.green.withValues(alpha: 0.3) : AppColors.border,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, size: 18, color: statusColor),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  isOpen ? 'TERBUKA' : 'TERTUTUP',
-                  style: AppTextStyles.caption.copyWith(
-                    color: statusColor,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: AppTextStyles.bodyBold.copyWith(
-              fontSize: 13,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isIrActive ? AppColors.cyan : AppColors.textSecondary.withValues(alpha: 0.4),
-                ),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                isIrActive ? 'IR: Kendaraan Terdeteksi' : 'IR: Siaga Standby',
-                style: AppTextStyles.caption.copyWith(
-                  color: isIrActive ? AppColors.cyan : AppColors.textSecondary,
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSlotCell(int number, bool isOccupied) {
-    final cellColor = isOccupied ? AppColors.danger : AppColors.green;
-
-    return Container(
-      height: 76,
-      decoration: BoxDecoration(
-        color: cellColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppRadii.sm),
-        border: Border.all(
-          color: cellColor.withValues(alpha: 0.35),
+          color: statusColor.withValues(alpha: 0.4),
           width: 1.2,
         ),
       ),
@@ -587,26 +359,26 @@ class ParkingTab extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '#$number',
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 10,
+            slotName,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 9.5,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
             ),
           ),
           const SizedBox(height: 4),
           Icon(
-            isOccupied ? Icons.directions_car_filled_rounded : Icons.check_circle_rounded,
+            isOccupied ? Icons.directions_car_filled_rounded : Icons.check_circle_outline_rounded,
             size: 22,
-            color: cellColor,
+            color: statusColor,
           ),
           const SizedBox(height: 4),
           Text(
-            isOccupied ? 'TERISI' : 'KOSONG',
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              color: cellColor,
+            isOccupied ? 'Terisi' : 'Kosong',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w700,
+              color: statusColor,
             ),
           ),
         ],
@@ -619,8 +391,8 @@ class ParkingTab extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 10,
-          height: 10,
+          width: 9,
+          height: 9,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
@@ -629,51 +401,94 @@ class ParkingTab extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           text,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.textSecondary,
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 11,
+            color: const Color(0xFF748391),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildNoticeBanner({
-    required IconData icon,
+  Widget _buildGateCard({
     required String title,
-    required String message,
-    required Color color,
+    required String status,
+    required bool isOpen,
+    required bool isIrActive,
+    required bool isDark,
   }) {
+    final statusColor = isOpen ? AppColors.green : AppColors.textSecondary;
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacings.m),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
+          // Gate / Ticket Icon
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.green.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.sensor_door_rounded,
+              color: AppColors.green,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Title & Status
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.bodyBold.copyWith(
-                    color: color,
-                    fontSize: 13,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  message,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                  status,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: statusColor,
                   ),
                 ),
               ],
+            ),
+          ),
+
+          // Blue Arrow Circle Button matching Mockup Screen 4
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: AppColors.cyan,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_forward_rounded,
+              size: 16,
+              color: Colors.white,
             ),
           ),
         ],

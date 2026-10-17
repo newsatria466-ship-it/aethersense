@@ -1,6 +1,6 @@
 {
-  "version": "1.0.14",
-  "versionCode": 15,
-  "changelog": "• Desain Menyeluruh Baru Smart City Tegal (Konsep Urban Eco-Tech)\n• Logo Resmi Baru Smart City Tegal terpasang pada Splash & App Icon\n• Navigasi 4 Destinasi Terpadu: Beranda, Monitoring, Smart Parking, Smart Lamp\n• Denah Interaktif 10 Slot Parkir Cerdas & Kontrol Palang Gerbang Servo\n• Kendali 4 Relay PJU & Mode Otomatis Sensor Cahaya LDR\n• Peningkatan Performa, Transisi Mulus & Animasi Berkelanjutan",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.14/app-release.apk"
+  "version": "1.0.15",
+  "versionCode": 16,
+  "changelog": "• Penerapan Mockup Desain Referensi Premium Smart City Tegal\n• Splash Screen: Animasi Gelombang Organik Cyan & Eco Green\n• Beranda: Header Baru (Profil & Notifikasi), Hero Alun-Alun dengan Cuaca, Banner Status Aman, dan Sparkline 24 Jam\n• Monitoring: Segmented Control (Lingkungan, Riwayat, Perangkat) yang Bersih & Mudah Dipahami\n• Smart Parking: Layout Denah Parkir Top-Down P1-P10, Indikator Persentase, dan Kartu Gerbang Masuk/Keluar\n• PJU Lampu: Kartu Master Terpadu, Tab Kontrol & Jadwal, serta Kendali 4 Zona (Jalur Utama, Taman, Barat, Timur)\n• Bottom Navigation Baru: Animasi Pill Aktif, Ikon Rumah, Daun, Mobil, dan Lampu",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.15/app-release.apk"
 }

@@ -75,6 +75,11 @@ class TelemetryData {
     DateTime? receivedAt,
   }) : receivedAt = receivedAt ?? DateTime.now();
 
+  double get temperature => temperatureC;
+  double get humidity => humidityPercent;
+  bool get isAirPolluted => isGasPolluted;
+  int get wifiRssi => wifiRssiDbm;
+
   /// Parse double safely from num, String, or null
   static double _parseDouble(dynamic val, [double fallback = 0.0]) {
     if (val == null) return fallback;

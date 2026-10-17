@@ -19,13 +19,13 @@ class AppColors {
   static const Color textSecondary = textSecondaryLight;
 
   // Light Theme Palette (Default)
-  static const Color backgroundLight = Color(0xFFF3F8FB);
+  static const Color backgroundLight = Color(0xFFF5F8FA);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color borderLight = Color(0xFFE4EDF2);
-  static const Color dividerLight = Color(0xFFEEF4F7);
+  static const Color borderLight = Color(0xFFE8EEF2);
+  static const Color dividerLight = Color(0xFFE8EEF2);
   static const Color textPrimaryLight = Color(0xFF172B3A);
-  static const Color textSecondaryLight = Color(0xFF718096);
+  static const Color textSecondaryLight = Color(0xFF748391);
   static const Color textMutedLight = Color(0xFFA0AEC0);
 
   // Dark Theme Palette

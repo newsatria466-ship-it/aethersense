@@ -23,15 +23,23 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUpdateSilently();
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkUpdateSilently() async {
@@ -50,6 +58,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       setState(() {
         _currentIndex = index;
       });
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
@@ -59,8 +72,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          IndexedStack(
-            index: _currentIndex,
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            physics: const BouncingScrollPhysics(),
             children: [
               HomeTab(onNavigateToTab: _onTabTapped),
               const MonitoringTab(),

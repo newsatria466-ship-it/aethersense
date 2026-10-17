@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-/// Tactile feedback widget with spring-like scale animation
+/// Tactile feedback widget with spring-like scale animation & subtle haptics
 class PressableScale extends StatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
@@ -8,15 +9,17 @@ class PressableScale extends StatefulWidget {
   final double scaleDownFactor;
   final Duration duration;
   final HitTestBehavior behavior;
+  final bool enableHaptic;
 
   const PressableScale({
     super.key,
     required this.child,
     this.onPressed,
     this.onTap,
-    this.scaleDownFactor = 0.965,
-    this.duration = const Duration(milliseconds: 130),
+    this.scaleDownFactor = 0.94,
+    this.duration = const Duration(milliseconds: 110),
     this.behavior = HitTestBehavior.opaque,
+    this.enableHaptic = true,
   });
 
   @override
@@ -36,7 +39,7 @@ class _PressableScaleState extends State<PressableScale>
     _controller = AnimationController(
       vsync: this,
       duration: widget.duration,
-      reverseDuration: widget.duration,
+      reverseDuration: const Duration(milliseconds: 180),
     );
     _scaleAnimation = Tween<double>(
       begin: 1.0,
@@ -44,7 +47,7 @@ class _PressableScaleState extends State<PressableScale>
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
+      reverseCurve: Curves.elasticOut,
     ));
   }
 
@@ -56,6 +59,9 @@ class _PressableScaleState extends State<PressableScale>
 
   void _onTapDown(TapDownDetails details) {
     if (_effectiveAction != null) {
+      if (widget.enableHaptic) {
+        HapticFeedback.lightImpact();
+      }
       _controller.forward();
     }
   }

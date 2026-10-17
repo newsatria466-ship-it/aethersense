@@ -47,6 +47,8 @@ class HomeTab extends StatelessWidget {
     final isConnected = controller.connectionStatus.toString().contains('connected');
 
     final temp = telemetry?.temperatureC ?? 28.0;
+    final humidity = telemetry?.humidityPercent ?? 68.0;
+    final mq135 = telemetry?.mq135Raw ?? 45;
     final isRaining = telemetry?.isRaining ?? false;
     final waterLevel = telemetry?.waterLevelCm ?? 12.0;
     final isFloodWarning = telemetry?.isFloodWarning ?? false;
@@ -88,40 +90,44 @@ class HomeTab extends StatelessWidget {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              // 1. Top App Header (Logo + Title + Notification + Avatar)
+              // 1. Top App Header (Full Logo + Title + Notification + Avatar)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Brand Logo & Name
+                      // Full Logo & Name
                       Row(
                         children: [
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
                               color: isDark ? AppColors.surfaceDark : Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isDark ? AppColors.borderDark : AppColors.border,
-                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(3),
                             child: Image.asset(
                               'assets/images/logo.png',
                               fit: BoxFit.contain,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Smart City',
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -0.2,
                                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
@@ -131,7 +137,7 @@ class HomeTab extends StatelessWidget {
                               Text(
                                 'Tegal',
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -0.2,
                                   color: AppColors.cyan,
@@ -157,7 +163,7 @@ class HomeTab extends StatelessWidget {
                               boxShadow: isConnected
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.green.withValues(alpha: 0.4),
+                                        color: AppColors.green.withValues(alpha: 0.5),
                                         blurRadius: 6,
                                         spreadRadius: 1,
                                       ),
@@ -227,390 +233,357 @@ class HomeTab extends StatelessWidget {
                 ),
               ),
 
-              // 2. Seamless Curved Header & Overlapping Status Card (matching dasbord.png)
+              // 2. UNIFIED CURVED HERO CARD (No overlapping cuts, perfectly joined)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isDark ? AppColors.borderDark : AppColors.border,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        // Top Photo Area
+                        SizedBox(
+                          height: 155,
+                          width: double.infinity,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.asset(
+                                'assets/images/hero-alun-alun.jpeg',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: const Color(0xFF1E3A8A),
+                                ),
+                              ),
+
+                              // Gradient Overlay
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.15),
+                                      Colors.black.withValues(alpha: 0.70),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // Texts & Weather Pill inside Photo
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Weather Pill at top right
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.22),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: Colors.white.withValues(alpha: 0.35),
+                                              width: 0.8,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                isRaining
+                                                    ? Icons.water_drop_rounded
+                                                    : Icons.wb_sunny_rounded,
+                                                size: 14,
+                                                color: Colors.amberAccent,
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                '${temp.toStringAsFixed(0)}°C ${isRaining ? "Hujan" : "Cerah Berawan"}',
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    // Bottom Greeting & Date
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${_getTimeGreeting()}\nTegal',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 21,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                            height: 1.15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          _getCurrentDateFormatted(),
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white.withValues(alpha: 0.90),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Seamless Status Bar (Unified bottom part, completely legible)
+                        PressableScale(
+                          onTap: () => onNavigateToTab(1),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            color: isDark ? AppColors.surfaceDark : Colors.white,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.verified_user_rounded,
+                                    size: 22,
+                                    color: statusColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Kondisi Kota: ',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                            ),
+                                          ),
+                                          Text(
+                                            cityStatusTitle,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w800,
+                                              color: statusColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        cityStatusSubtitle,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11,
+                                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(alpha: 0.10),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 18,
+                                    color: statusColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+              // 3. MONITORING LINGKUNGAN (Tampil Langsung di Beranda!)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Monitoring Lingkungan',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      PressableScale(
+                        onTap: () => onNavigateToTab(1),
+                        child: Text(
+                          'Lihat Semua →',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.cyan,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+              // 4 Sensors Grid (2x2)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      // Hero Photo Container (Curved edges)
-                      Container(
-                        height: 175,
-                        width: double.infinity,
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              'assets/images/hero-alun-alun.jpeg',
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: const Color(0xFF1E3A8A),
-                              ),
-                            ),
-
-                            // Gradient Overlay for readability
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.2),
-                                    Colors.black.withValues(alpha: 0.65),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            // Overlay Text: Greeting, Date, and Weather Pill
-                            Padding(
-                              padding: const EdgeInsets.all(18),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // Top Weather Pill
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.22),
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(
-                                            color: Colors.white.withValues(alpha: 0.35),
-                                            width: 0.8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              isRaining
-                                                  ? Icons.water_drop_rounded
-                                                  : Icons.wb_sunny_rounded,
-                                              size: 14,
-                                              color: Colors.amberAccent,
-                                            ),
-                                            const SizedBox(width: 5),
-                                            Text(
-                                              '${temp.toStringAsFixed(0)}°C ${isRaining ? "Hujan" : "Cerah Berawan"}',
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  // Bottom Greeting and Date
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${_getTimeGreeting()}\nTegal',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                          height: 1.15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _getCurrentDateFormatted(),
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.white.withValues(alpha: 0.85),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // OVERLAPPING CURVED CARD: "Kondisi Kota: Aman" (Menyatu & melengkung persis dasbord.png)
-                      Transform.translate(
-                        offset: const Offset(0, -28),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: PressableScale(
-                            onTap: () => onNavigateToTab(1), // Go to Monitoring Tab
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppColors.surfaceDark : Colors.white,
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(
-                                  color: isDark ? AppColors.borderDark : AppColors.border,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.08),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  // Green Shield Checkmark Icon
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: statusColor.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Icon(
-                                      Icons.verified_user_rounded,
-                                      size: 24,
-                                      color: statusColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-
-                                  // Status Texts
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Kondisi Kota',
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          cityStatusTitle,
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w800,
-                                            color: statusColor,
-                                          ),
-                                        ),
-                                        Text(
-                                          cityStatusSubtitle,
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11,
-                                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Circular Action Chevron
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: statusColor.withValues(alpha: 0.10),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.chevron_right_rounded,
-                                      size: 20,
-                                      color: statusColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                      // Row 1: Suhu & Kelembaban
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSensorMetricCard(
+                              context: context,
+                              isDark: isDark,
+                              icon: Icons.thermostat_rounded,
+                              iconColor: AppColors.cyan,
+                              iconBg: AppColors.cyan.withValues(alpha: 0.12),
+                              label: 'Suhu Udara',
+                              value: '${temp.toStringAsFixed(1)}°C',
+                              statusBadge: temp > 33 ? 'Panas' : 'Normal',
+                              badgeColor: temp > 33 ? AppColors.warning : AppColors.green,
+                              onTap: () => onNavigateToTab(1),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildSensorMetricCard(
+                              context: context,
+                              isDark: isDark,
+                              icon: Icons.water_drop_rounded,
+                              iconColor: const Color(0xFF0284C7),
+                              iconBg: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                              label: 'Kelembaban',
+                              value: '${humidity.toStringAsFixed(0)}%',
+                              statusBadge: 'Optimal',
+                              badgeColor: AppColors.green,
+                              onTap: () => onNavigateToTab(1),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Row 2: Gas MQ-135 & Status Hujan
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSensorMetricCard(
+                              context: context,
+                              isDark: isDark,
+                              icon: Icons.eco_rounded,
+                              iconColor: isAirPolluted ? AppColors.warning : AppColors.green,
+                              iconBg: (isAirPolluted ? AppColors.warning : AppColors.green).withValues(alpha: 0.12),
+                              label: 'Kualitas Udara',
+                              value: '$mq135 PPM',
+                              statusBadge: isAirPolluted ? 'Perlu Waspada' : 'Udara Bersih',
+                              badgeColor: isAirPolluted ? AppColors.warning : AppColors.green,
+                              onTap: () => onNavigateToTab(1),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildSensorMetricCard(
+                              context: context,
+                              isDark: isDark,
+                              icon: isRaining ? Icons.umbrella_rounded : Icons.wb_sunny_rounded,
+                              iconColor: isRaining ? const Color(0xFF2563EB) : Colors.amber.shade700,
+                              iconBg: (isRaining ? const Color(0xFF2563EB) : Colors.amber).withValues(alpha: 0.12),
+                              label: 'Status Hujan',
+                              value: isRaining ? 'Hujan' : 'Cerah',
+                              statusBadge: isRaining ? 'Basah' : 'Kering',
+                              badgeColor: isRaining ? AppColors.cyan : AppColors.green,
+                              onTap: () => onNavigateToTab(1),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // 3. Quick Metric Cards (2 Columns: Parkir Tersedia & Penerangan)
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+              // Ketinggian Air Sungai & Riwayat
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                  child: Row(
-                    children: [
-                      // Parkir Tersedia
-                      Expanded(
-                        child: PressableScale(
-                          onTap: () => onNavigateToTab(2), // Go to Parkir Tab
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.surfaceDark : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: isDark ? AppColors.borderDark : AppColors.border,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.cyan.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(
-                                    Icons.directions_car_filled_rounded,
-                                    size: 20,
-                                    color: AppColors.cyan,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Parkir Tersedia',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '$availableParking / $totalParking',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  'Slot kosong',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-
-                      // Penerangan (PJU)
-                      Expanded(
-                        child: PressableScale(
-                          onTap: () => onNavigateToTab(3), // Go to Lamp Tab
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.surfaceDark : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: isDark ? AppColors.borderDark : AppColors.border,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: activeRelays > 0
-                                        ? Colors.amber.withValues(alpha: 0.15)
-                                        : AppColors.cyan.withValues(alpha: 0.10),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    Icons.lightbulb_rounded,
-                                    size: 20,
-                                    color: activeRelays > 0 ? Colors.amber.shade700 : AppColors.cyan,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Penerangan',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  activeRelays > 0 ? 'Aktif' : 'Padam',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: activeRelays > 0
-                                        ? AppColors.green
-                                        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
-                                  ),
-                                ),
-                                Text(
-                                  '$activeRelays zona menyala',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 4. Ringkasan Hari Ini (Sparkline Chart & Water Level Summary)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: PressableScale(
                     onTap: () => MonitoringHistoryModal.show(context),
                     child: Container(
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: isDark ? AppColors.surfaceDark : Colors.white,
                         borderRadius: BorderRadius.circular(18),
@@ -631,18 +604,48 @@ class HomeTab extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Ringkasan Hari Ini',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: (isFloodWarning ? AppColors.danger : AppColors.cyan).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.waves_rounded,
+                                      size: 18,
+                                      color: isFloodWarning ? AppColors.danger : AppColors.cyan,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Ketinggian Air Sungai',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Peringatan Dini Banjir',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 10.5,
+                                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                               Row(
                                 children: [
                                   Text(
-                                    'Buka Riwayat',
+                                    'Riwayat 24 Jam',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -659,68 +662,50 @@ class HomeTab extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-
+                          const SizedBox(height: 12),
                           Row(
                             children: [
                               // Mini Sparkline Graph
                               Expanded(
                                 flex: 3,
                                 child: SizedBox(
-                                  height: 60,
+                                  height: 52,
                                   child: CustomPaint(
                                     painter: _HomeSparklinePainter(
-                                      color: AppColors.cyan,
+                                      color: isFloodWarning ? AppColors.danger : AppColors.cyan,
                                       isDark: isDark,
                                     ),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 16),
-
-                              // Right Metric Text
+                              // Water Level Text
                               Expanded(
                                 flex: 2,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.cyan.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        '+2cm',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.cyan,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Ketinggian air',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 10.5,
-                                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                      ),
-                                    ),
                                     Text(
                                       '${waterLevel.toStringAsFixed(0)} cm',
                                       style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 16,
+                                        fontSize: 20,
                                         fontWeight: FontWeight.w800,
                                         color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                                       ),
                                     ),
-                                    Text(
-                                      isFloodWarning ? 'Waspada' : 'Normal',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: isFloodWarning ? AppColors.danger : AppColors.green,
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: (isFloodWarning ? AppColors.danger : AppColors.green).withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        isFloodWarning ? 'Waspada Banjir' : 'Bebas Banjir',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: isFloodWarning ? AppColors.danger : AppColors.green,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -734,8 +719,283 @@ class HomeTab extends StatelessWidget {
                   ),
                 ),
               ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+              // 4. LAYANAN KOTA (Parkir & Penerangan Jalan dengan Animasi Berpindah)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Layanan Fasilitas Kota',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+              // 2 Interactive Feature Cards: Parkir & PJU
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
+                  child: Row(
+                    children: [
+                      // Parkir Cerdas Card
+                      Expanded(
+                        child: PressableScale(
+                          onTap: () => onNavigateToTab(2), // Animated jump to Parkir Tab
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.surfaceDark : Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: isDark ? AppColors.borderDark : AppColors.border,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.cyan.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(
+                                        Icons.directions_car_filled_rounded,
+                                        size: 20,
+                                        color: AppColors.cyan,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 16,
+                                      color: AppColors.cyan,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Parkir Cerdas',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '$availableParking / $totalParking',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Slot Kosong Tersedia',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10.5,
+                                    color: AppColors.cyan,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+
+                      // Penerangan (PJU) Card
+                      Expanded(
+                        child: PressableScale(
+                          onTap: () => onNavigateToTab(3), // Animated jump to Lamp Tab
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.surfaceDark : Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: isDark ? AppColors.borderDark : AppColors.border,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: activeRelays > 0
+                                            ? Colors.amber.withValues(alpha: 0.15)
+                                            : AppColors.cyan.withValues(alpha: 0.10),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.lightbulb_rounded,
+                                        size: 20,
+                                        color: activeRelays > 0 ? Colors.amber.shade700 : AppColors.cyan,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 16,
+                                      color: AppColors.cyan,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Penerangan (PJU)',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  activeRelays > 0 ? '$activeRelays Zona Nyala' : 'Padam',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: activeRelays > 0
+                                        ? AppColors.green
+                                        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+                                  ),
+                                ),
+                                Text(
+                                  controller.isAutoMode ? 'Mode Sensor Otomatis' : 'Mode Manual',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10.5,
+                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSensorMetricCard({
+    required BuildContext context,
+    required bool isDark,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String label,
+    required String value,
+    required String statusBadge,
+    required Color badgeColor,
+    required VoidCallback onTap,
+  }) {
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? AppColors.borderDark : AppColors.border,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 18, color: iconColor),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    statusBadge,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: badgeColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );

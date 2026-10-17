@@ -1,6 +1,6 @@
 {
-  "version": "1.0.17",
-  "versionCode": 18,
-  "changelog": "• Desain Baru Header Melengkung & Menyatu (Seamless Curved Header sesuai dasbord.png)\n• Warna Ekstrak Logo Resmi: Perpaduan Cyan Blue, Eco Green, dan Pure White\n• Tampilan Bersih: Menghilangkan istilah teknis rumit (ADC, GPIO, RSSI) dari dashboard utama warga\n• Pengalaman Gerak & Efek: Animasi buka aplikasi baru (Splash), interaksi tekan tombol taktil, dan transisi tab halus\n• Dialog Pembaruan yang Kompak: Catatan perubahan dapat di-scroll dan tombol update selalu terlihat jelas",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.17/app-release.apk"
+  "version": "1.0.18",
+  "versionCode": 19,
+  "changelog": "• Header Bersambung Halus: Tata letak kartu foto dan status kota kini terintegrasi harmonis tanpa tumpang tindih teks.\n• Monitoring Lingkungan Langsung di Beranda: Data suhu, kelembaban, kualitas udara (MQ-135), dan status hujan kini langsung terpantau di layar utama.\n• Efek Animasi & Haptik: Animasi transisi geser halaman saat berpindah tab/kartu parkir & PJU, serta efek tekan membal yang responsif.\n• Ikon Aplikasi Full & Tajam: Logo aplikasi pada layar HP kini tampil penuh, tegas, dan tidak mengecil (dukungan Adaptive Icon modern).",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.18/app-release.apk"
 }

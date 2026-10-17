@@ -1,6 +1,6 @@
 {
-  "version": "1.0.16",
-  "versionCode": 17,
-  "changelog": "• Pemulihan Tampilan Dashboard Stabil (Kembali ke Desain v1.0.13)\n• Perbaikan Kotak Dialog Pembaruan: Catatan perubahan kini dilengkapi scroll dinamis sehingga tombol update tidak akan tenggelam dan selalu mudah ditekan",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.16/app-release.apk"
+  "version": "1.0.17",
+  "versionCode": 18,
+  "changelog": "• Desain Baru Header Melengkung & Menyatu (Seamless Curved Header sesuai dasbord.png)\n• Warna Ekstrak Logo Resmi: Perpaduan Cyan Blue, Eco Green, dan Pure White\n• Tampilan Bersih: Menghilangkan istilah teknis rumit (ADC, GPIO, RSSI) dari dashboard utama warga\n• Pengalaman Gerak & Efek: Animasi buka aplikasi baru (Splash), interaksi tekan tombol taktil, dan transisi tab halus\n• Dialog Pembaruan yang Kompak: Catatan perubahan dapat di-scroll dan tombol update selalu terlihat jelas",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.17/app-release.apk"
 }

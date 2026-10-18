@@ -6,13 +6,44 @@ import '../../theme/app_theme.dart';
 import '../../widgets/monitoring_history_modal.dart';
 import '../../widgets/pressable_scale.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   final Function(int) onNavigateToTab;
 
   const HomeTab({
     super.key,
     required this.onNavigateToTab,
   });
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
+
+  Function(int) get onNavigateToTab => widget.onNavigateToTab;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (mounted) {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    }
+  }
 
   String _getTimeGreeting() {
     final hour = DateTime.now().hour;
@@ -38,6 +69,7 @@ class HomeTab extends StatelessWidget {
     final monthName = months[now.month - 1];
     return '$dayName, ${now.day} $monthName ${now.year}';
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +127,7 @@ class HomeTab extends StatelessWidget {
             await Future.delayed(const Duration(milliseconds: 500));
           },
           child: CustomScrollView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               // 1. Top App Header (Full Logo + Title + Notification + Avatar)
@@ -269,13 +302,24 @@ class HomeTab extends StatelessWidget {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              Image.asset(
-                                'assets/images/hero-alun-alun.jpeg',
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: const Color(0xFF1E3A8A),
+                              // 3D Parallax & Stretch Zoom Depth Image
+                              Transform.translate(
+                                offset: Offset(0, _scrollOffset > 0 ? -(_scrollOffset * 0.35) : 0),
+                                child: Transform.scale(
+                                  scale: _scrollOffset < 0
+                                      ? (1.18 + (_scrollOffset.abs() / 250))
+                                      : 1.18,
+                                  child: Image.asset(
+                                    'assets/images/hero-alun-alun.jpeg',
+                                    fit: BoxFit.cover,
+                                    alignment: Alignment.center,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: const Color(0xFF1E3A8A),
+                                    ),
+                                  ),
                                 ),
                               ),
+
 
                               // Gradient Overlay
                               Container(

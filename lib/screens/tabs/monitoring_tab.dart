@@ -5,6 +5,7 @@ import '../../controllers/telemetry_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/monitoring_history_modal.dart';
 import '../../widgets/pressable_scale.dart';
+import '../../widgets/staggered_entrance.dart';
 
 class MonitoringTab extends StatefulWidget {
   const MonitoringTab({super.key});
@@ -167,88 +168,104 @@ class _MonitoringTabState extends State<MonitoringTab> {
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
       children: [
         // 1. Ketinggian Air
-        _buildMetricItem(
-          isDark: isDark,
-          icon: Icons.waves_rounded,
-          iconColor: AppColors.cyan,
-          iconBg: AppColors.cyan.withValues(alpha: 0.12),
-          title: 'Ketinggian Air',
-          value: hasData ? '${waterLevel!.toStringAsFixed(0)} cm' : '-- cm',
-          status: hasData ? (isFlood ? 'Waspada' : 'Normal') : 'Menunggu',
-          statusColor: hasData
-              ? (isFlood ? AppColors.danger : AppColors.green)
-              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
-          showSparkline: true,
-          onTap: () => MonitoringHistoryModal.show(context),
+        StaggeredEntrance(
+          index: 0,
+          child: _buildMetricItem(
+            isDark: isDark,
+            icon: Icons.waves_rounded,
+            iconColor: AppColors.cyan,
+            iconBg: AppColors.cyan.withValues(alpha: 0.12),
+            title: 'Ketinggian Air',
+            value: hasData ? '${waterLevel!.toStringAsFixed(0)} cm' : '-- cm',
+            status: hasData ? (isFlood ? 'Waspada' : 'Normal') : 'Menunggu',
+            statusColor: hasData
+                ? (isFlood ? AppColors.danger : AppColors.green)
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+            showSparkline: true,
+            onTap: () => MonitoringHistoryModal.show(context),
+          ),
         ),
         const SizedBox(height: 12),
 
         // 2. Suhu Udara
-        _buildMetricItem(
-          isDark: isDark,
-          icon: Icons.thermostat_rounded,
-          iconColor: Colors.deepOrangeAccent,
-          iconBg: Colors.deepOrangeAccent.withValues(alpha: 0.12),
-          title: 'Suhu Udara',
-          value: hasData ? '${temp!.toStringAsFixed(1)}°C' : '--°C',
-          status: hasData ? (temp! > 33 ? 'Panas' : 'Normal') : 'Menunggu',
-          statusColor: hasData
-              ? (temp! > 33 ? AppColors.warning : AppColors.green)
-              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
-          showSparkline: true,
-          onTap: () => MonitoringHistoryModal.show(context),
+        StaggeredEntrance(
+          index: 1,
+          child: _buildMetricItem(
+            isDark: isDark,
+            icon: Icons.thermostat_rounded,
+            iconColor: Colors.deepOrangeAccent,
+            iconBg: Colors.deepOrangeAccent.withValues(alpha: 0.12),
+            title: 'Suhu Udara',
+            value: hasData ? '${temp!.toStringAsFixed(1)}°C' : '--°C',
+            status: hasData ? (temp! > 33 ? 'Panas' : 'Normal') : 'Menunggu',
+            statusColor: hasData
+                ? (temp! > 33 ? AppColors.warning : AppColors.green)
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+            showSparkline: true,
+            onTap: () => MonitoringHistoryModal.show(context),
+          ),
         ),
         const SizedBox(height: 12),
 
         // 3. Kelembapan
-        _buildMetricItem(
-          isDark: isDark,
-          icon: Icons.water_drop_rounded,
-          iconColor: Colors.blueAccent,
-          iconBg: Colors.blueAccent.withValues(alpha: 0.12),
-          title: 'Kelembapan',
-          value: hasData ? '${humidity!.toStringAsFixed(0)}%' : '--%',
-          status: hasData ? 'Optimal' : 'Menunggu',
-          statusColor: hasData
-              ? AppColors.green
-              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
-          showSparkline: false,
-          onTap: () => MonitoringHistoryModal.show(context),
+        StaggeredEntrance(
+          index: 2,
+          child: _buildMetricItem(
+            isDark: isDark,
+            icon: Icons.water_drop_rounded,
+            iconColor: Colors.blueAccent,
+            iconBg: Colors.blueAccent.withValues(alpha: 0.12),
+            title: 'Kelembapan',
+            value: hasData ? '${humidity!.toStringAsFixed(0)}%' : '--%',
+            status: hasData ? 'Optimal' : 'Menunggu',
+            statusColor: hasData
+                ? AppColors.green
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+            showSparkline: false,
+            onTap: () => MonitoringHistoryModal.show(context),
+          ),
         ),
         const SizedBox(height: 12),
 
         // 4. Deteksi Hujan
-        _buildMetricItem(
-          isDark: isDark,
-          icon: Icons.cloud_rounded,
-          iconColor: AppColors.cyan,
-          iconBg: AppColors.cyan.withValues(alpha: 0.12),
-          title: 'Deteksi Hujan',
-          value: hasData ? (isRaining ? 'Hujan' : 'Tidak Hujan') : '--',
-          status: hasData ? (isRaining ? 'Hati-hati' : 'Aman') : 'Menunggu',
-          statusColor: hasData
-              ? (isRaining ? AppColors.warning : AppColors.green)
-              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
-          showSparkline: false,
-          onTap: () => MonitoringHistoryModal.show(context),
+        StaggeredEntrance(
+          index: 3,
+          child: _buildMetricItem(
+            isDark: isDark,
+            icon: Icons.cloud_rounded,
+            iconColor: AppColors.cyan,
+            iconBg: AppColors.cyan.withValues(alpha: 0.12),
+            title: 'Deteksi Hujan',
+            value: hasData ? (isRaining ? 'Hujan' : 'Tidak Hujan') : '--',
+            status: hasData ? (isRaining ? 'Hati-hati' : 'Aman') : 'Menunggu',
+            statusColor: hasData
+                ? (isRaining ? AppColors.warning : AppColors.green)
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+            showSparkline: false,
+            onTap: () => MonitoringHistoryModal.show(context),
+          ),
         ),
         const SizedBox(height: 12),
 
         // 5. Kualitas Udara
-        _buildMetricItem(
-          isDark: isDark,
-          icon: Icons.eco_rounded,
-          iconColor: AppColors.green,
-          iconBg: AppColors.green.withValues(alpha: 0.12),
-          title: 'Kualitas Udara',
-          value: hasData ? airQualityStatus : '--',
-          status: hasData ? (isAirPolluted ? 'Perhatian' : 'Normal') : 'Menunggu',
-          statusColor: hasData
-              ? (isAirPolluted ? AppColors.warning : AppColors.green)
-              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
-          showSparkline: false,
-          onTap: () => MonitoringHistoryModal.show(context),
+        StaggeredEntrance(
+          index: 4,
+          child: _buildMetricItem(
+            isDark: isDark,
+            icon: Icons.eco_rounded,
+            iconColor: AppColors.green,
+            iconBg: AppColors.green.withValues(alpha: 0.12),
+            title: 'Kualitas Udara',
+            value: hasData ? airQualityStatus : '--',
+            status: hasData ? (isAirPolluted ? 'Perhatian' : 'Normal') : 'Menunggu',
+            statusColor: hasData
+                ? (isAirPolluted ? AppColors.warning : AppColors.green)
+                : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+            showSparkline: false,
+            onTap: () => MonitoringHistoryModal.show(context),
+          ),
         ),
+
       ],
     );
   }

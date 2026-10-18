@@ -1,6 +1,6 @@
 {
-  "version": "1.0.21",
-  "versionCode": 22,
-  "changelog": "• Animasi Navbar Meluncur: Indikator latar belakang kapsul kini meluncur mulus secara fisik (Sliding Magnetic Pill) dengan kurva pegas elastis dan icon micro-bounce.\n• Eksperimen Dual Motion: Uji coba perbandingan langsung antara transisi Smooth Depth Scale (Beranda & Monitoring) vs Directional Shared-Axis Slide (Parkir & PJU).\n• Haptic Feedback: Dilengkapi getaran taktil renyah saat berpindah tab.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.21/app-release.apk"
+  "version": "1.0.22",
+  "versionCode": 23,
+  "changelog": "• Header Parallax 3D & Stretch Zoom: Foto header alun-alun kini bergerak dengan kedalaman 3D saat di-scroll dan membal elastis saat di-refresh.\n• Animasi Air Terjun (Staggered Cascade): Kartu telemetri, parkir, dan saklar PJU meluncur masuk bertingkat satu per satu saat tab dibuka.\n• Lamp Light Bloom & Pendaran Saklar: Saklar PJU kini memendarkan pendaran cahaya hangat (radial flare) saat dihidupkan.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.22/app-release.apk"
 }

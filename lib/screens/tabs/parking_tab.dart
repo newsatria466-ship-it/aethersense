@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/telemetry_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/pressable_scale.dart';
+import '../../widgets/staggered_entrance.dart';
 
 class ParkingTab extends StatelessWidget {
   const ParkingTab({super.key});
@@ -113,179 +114,186 @@ class ParkingTab extends StatelessWidget {
 
                 // Top Summary Card
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.surfaceDark : Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: isDark ? AppColors.borderDark : AppColors.border,
+                  child: StaggeredEntrance(
+                    index: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.surfaceDark : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: isDark ? AppColors.borderDark : AppColors.border,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.025),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.025),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 46,
-                            height: 46,
-                            decoration: BoxDecoration(
-                              color: AppColors.cyan.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.directions_car_filled_rounded,
-                              size: 24,
-                              color: AppColors.cyan,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '$available / $total',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  'Slot Tersedia',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11.5,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: AppColors.green.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '$percentAvailable%',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.green,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: AppColors.cyan.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.directions_car_filled_rounded,
+                                size: 24,
+                                color: AppColors.cyan,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$available / $total',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Slot Tersedia',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11.5,
+                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: AppColors.green.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '$percentAvailable%',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.green,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
 
+
                 // Visual Parking Lot Layout (P1 to P10)
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.surfaceDark : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isDark ? AppColors.borderDark : AppColors.border,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                  child: StaggeredEntrance(
+                    index: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.surfaceDark : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isDark ? AppColors.borderDark : AppColors.border,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // Top Row (P1 - P5)
-                          Row(
-                            children: List.generate(5, (index) {
-                              final slotNum = index + 1;
-                              final isOccupied = slotNum <= occupied;
-                              return Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                                  child: _buildParkingSlot(
-                                    slotName: 'P$slotNum',
-                                    isOccupied: isOccupied,
-                                    isDark: isDark,
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Driveway
-                          Container(
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F1A24) : const Color(0xFFEEF2F6),
-                              borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
                             ),
-                            child: Center(
-                              child: Text(
-                                '◄   JALUR MASUK & KELUAR   ►',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.0,
-                                  color: isDark ? AppColors.textSecondaryDark : const Color(0xFF8C9BA8),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // Top Row (P1 - P5)
+                            Row(
+                              children: List.generate(5, (index) {
+                                final slotNum = index + 1;
+                                final isOccupied = slotNum <= occupied;
+                                return Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                                    child: _buildParkingSlot(
+                                      slotName: 'P$slotNum',
+                                      isOccupied: isOccupied,
+                                      isDark: isDark,
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Driveway
+                            Container(
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0F1A24) : const Color(0xFFEEF2F6),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '◄   JALUR MASUK & KELUAR   ►',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.0,
+                                    color: isDark ? AppColors.textSecondaryDark : const Color(0xFF8C9BA8),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 12),
+                            const SizedBox(height: 12),
 
-                          // Bottom Row (P6 - P10)
-                          Row(
-                            children: List.generate(5, (index) {
-                              final slotNum = index + 6;
-                              final isOccupied = slotNum <= occupied;
-                              return Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                                  child: _buildParkingSlot(
-                                    slotName: 'P$slotNum',
-                                    isOccupied: isOccupied,
-                                    isDark: isDark,
+                            // Bottom Row (P6 - P10)
+                            Row(
+                              children: List.generate(5, (index) {
+                                final slotNum = index + 6;
+                                final isOccupied = slotNum <= occupied;
+                                return Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                                    child: _buildParkingSlot(
+                                      slotName: 'P$slotNum',
+                                      isOccupied: isOccupied,
+                                      isDark: isDark,
+                                    ),
                                   ),
-                                ),
-                              );
-                            }),
-                          ),
+                                );
+                              }),
+                            ),
 
-                          const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                          // Legend
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildLegendItem(AppColors.green, 'Tersedia'),
-                              const SizedBox(width: 16),
-                              _buildLegendItem(AppColors.danger, 'Terisi'),
-                              const SizedBox(width: 16),
-                              _buildLegendItem(const Color(0xFF9E9E9E), 'Tidak Aktif'),
-                            ],
-                          ),
-                        ],
+                            // Legend
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildLegendItem(AppColors.green, 'Tersedia'),
+                                const SizedBox(width: 16),
+                                _buildLegendItem(AppColors.danger, 'Terisi'),
+                                const SizedBox(width: 16),
+                                _buildLegendItem(const Color(0xFF9E9E9E), 'Tidak Aktif'),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -293,27 +301,31 @@ class ParkingTab extends StatelessWidget {
 
                 // Gate Action Cards
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        _buildGateCard(
-                          title: 'Gerbang Masuk',
-                          status: controller.isEntryGateOpen ? 'Terbuka' : 'Tertutup',
-                          isOpen: controller.isEntryGateOpen,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 10),
-                        _buildGateCard(
-                          title: 'Gerbang Keluar',
-                          status: controller.isExitGateOpen ? 'Terbuka' : 'Tertutup',
-                          isOpen: controller.isExitGateOpen,
-                          isDark: isDark,
-                        ),
-                      ],
+                  child: StaggeredEntrance(
+                    index: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          _buildGateCard(
+                            title: 'Gerbang Masuk',
+                            status: controller.isEntryGateOpen ? 'Terbuka' : 'Tertutup',
+                            isOpen: controller.isEntryGateOpen,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildGateCard(
+                            title: 'Gerbang Keluar',
+                            status: controller.isExitGateOpen ? 'Terbuka' : 'Tertutup',
+                            isOpen: controller.isExitGateOpen,
+                            isDark: isDark,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+
 
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 110),

@@ -21,14 +21,16 @@ class _MonitoringTabState extends State<MonitoringTab> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = context.watch<TelemetryController>();
     final telemetry = controller.telemetry;
+    final hasData = controller.hasData && telemetry != null;
     final isConnected = controller.connectionStatus.toString().contains('connected');
 
-    final waterLevel = telemetry?.waterLevelCm ?? 12.0;
+    final waterLevel = telemetry?.waterLevelCm;
     final isFlood = telemetry?.isFloodWarning ?? false;
-    final temp = telemetry?.temperatureC ?? 28.0;
-    final humidity = telemetry?.humidityPercent ?? 72.0;
+    final temp = telemetry?.temperatureC;
+    final humidity = telemetry?.humidityPercent;
     final isRaining = telemetry?.isRaining ?? false;
     final isAirPolluted = telemetry?.isGasPolluted ?? false;
+    final airQualityStatus = telemetry?.airQualityStatus ?? (isAirPolluted ? 'Sedang' : 'Baik');
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
@@ -83,12 +85,14 @@ class _MonitoringTabState extends State<MonitoringTab> {
               child: _selectedSegment == 0
                   ? _buildLingkunganList(
                       isDark: isDark,
+                      hasData: hasData,
                       waterLevel: waterLevel,
                       isFlood: isFlood,
                       temp: temp,
                       humidity: humidity,
                       isRaining: isRaining,
                       isAirPolluted: isAirPolluted,
+                      airQualityStatus: airQualityStatus,
                       isConnected: isConnected,
                     )
                   : _selectedSegment == 1
@@ -148,12 +152,14 @@ class _MonitoringTabState extends State<MonitoringTab> {
 
   Widget _buildLingkunganList({
     required bool isDark,
-    required double waterLevel,
+    required bool hasData,
+    required double? waterLevel,
     required bool isFlood,
-    required double temp,
-    required double humidity,
+    required double? temp,
+    required double? humidity,
     required bool isRaining,
     required bool isAirPolluted,
+    required String airQualityStatus,
     required bool isConnected,
   }) {
     return ListView(
@@ -167,9 +173,11 @@ class _MonitoringTabState extends State<MonitoringTab> {
           iconColor: AppColors.cyan,
           iconBg: AppColors.cyan.withValues(alpha: 0.12),
           title: 'Ketinggian Air',
-          value: '${waterLevel.toStringAsFixed(0)} cm',
-          status: isFlood ? 'Waspada' : 'Normal',
-          statusColor: isFlood ? AppColors.danger : AppColors.green,
+          value: hasData ? '${waterLevel!.toStringAsFixed(0)} cm' : '-- cm',
+          status: hasData ? (isFlood ? 'Waspada' : 'Normal') : 'Menunggu',
+          statusColor: hasData
+              ? (isFlood ? AppColors.danger : AppColors.green)
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
           showSparkline: true,
           onTap: () => MonitoringHistoryModal.show(context),
         ),
@@ -182,9 +190,11 @@ class _MonitoringTabState extends State<MonitoringTab> {
           iconColor: Colors.deepOrangeAccent,
           iconBg: Colors.deepOrangeAccent.withValues(alpha: 0.12),
           title: 'Suhu Udara',
-          value: '${temp.toStringAsFixed(0)}°C',
-          status: 'Normal',
-          statusColor: AppColors.green,
+          value: hasData ? '${temp!.toStringAsFixed(1)}°C' : '--°C',
+          status: hasData ? (temp! > 33 ? 'Panas' : 'Normal') : 'Menunggu',
+          statusColor: hasData
+              ? (temp! > 33 ? AppColors.warning : AppColors.green)
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
           showSparkline: true,
           onTap: () => MonitoringHistoryModal.show(context),
         ),
@@ -197,9 +207,11 @@ class _MonitoringTabState extends State<MonitoringTab> {
           iconColor: Colors.blueAccent,
           iconBg: Colors.blueAccent.withValues(alpha: 0.12),
           title: 'Kelembapan',
-          value: '${humidity.toStringAsFixed(0)}%',
-          status: 'Normal',
-          statusColor: AppColors.green,
+          value: hasData ? '${humidity!.toStringAsFixed(0)}%' : '--%',
+          status: hasData ? 'Optimal' : 'Menunggu',
+          statusColor: hasData
+              ? AppColors.green
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
           showSparkline: false,
           onTap: () => MonitoringHistoryModal.show(context),
         ),
@@ -212,9 +224,11 @@ class _MonitoringTabState extends State<MonitoringTab> {
           iconColor: AppColors.cyan,
           iconBg: AppColors.cyan.withValues(alpha: 0.12),
           title: 'Deteksi Hujan',
-          value: isRaining ? 'Hujan' : 'Tidak Hujan',
-          status: isRaining ? 'Hati-hati' : 'Aman',
-          statusColor: isRaining ? AppColors.warning : AppColors.green,
+          value: hasData ? (isRaining ? 'Hujan' : 'Tidak Hujan') : '--',
+          status: hasData ? (isRaining ? 'Hati-hati' : 'Aman') : 'Menunggu',
+          statusColor: hasData
+              ? (isRaining ? AppColors.warning : AppColors.green)
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
           showSparkline: false,
           onTap: () => MonitoringHistoryModal.show(context),
         ),
@@ -227,9 +241,11 @@ class _MonitoringTabState extends State<MonitoringTab> {
           iconColor: AppColors.green,
           iconBg: AppColors.green.withValues(alpha: 0.12),
           title: 'Kualitas Udara',
-          value: isAirPolluted ? 'Sedang' : 'Baik',
-          status: isAirPolluted ? 'Perhatian' : 'Normal',
-          statusColor: isAirPolluted ? AppColors.warning : AppColors.green,
+          value: hasData ? airQualityStatus : '--',
+          status: hasData ? (isAirPolluted ? 'Perhatian' : 'Normal') : 'Menunggu',
+          statusColor: hasData
+              ? (isAirPolluted ? AppColors.warning : AppColors.green)
+              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
           showSparkline: false,
           onTap: () => MonitoringHistoryModal.show(context),
         ),

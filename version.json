@@ -1,6 +1,6 @@
 {
-  "version": "1.0.18",
-  "versionCode": 19,
-  "changelog": "• Header Bersambung Halus: Tata letak kartu foto dan status kota kini terintegrasi harmonis tanpa tumpang tindih teks.\n• Monitoring Lingkungan Langsung di Beranda: Data suhu, kelembaban, kualitas udara (MQ-135), dan status hujan kini langsung terpantau di layar utama.\n• Efek Animasi & Haptik: Animasi transisi geser halaman saat berpindah tab/kartu parkir & PJU, serta efek tekan membal yang responsif.\n• Ikon Aplikasi Full & Tajam: Logo aplikasi pada layar HP kini tampil penuh, tegas, dan tidak mengecil (dukungan Adaptive Icon modern).",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.18/app-release.apk"
+  "version": "1.0.19",
+  "versionCode": 20,
+  "changelog": "• Data Sensor 100% Real-Time MQTT: Menghilangkan seluruh nilai cadangan tiruan (dummy). Nilai sensor kini murni bersumber dari transmisi broker ESP32.\n• Status Sinkronisasi Jelas: Saat belum ada paket sensor dari mikrokontroler, layar menampilkan indikator sinkronisasi '--' dan status 'Menunggu Data' tanpa angka palsu.\n• Ketahanan Koneksi Broker: Mendukung pembacaan status teks mentah seperti LWT 'offline'/'online' tanpa error format.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.19/app-release.apk"
 }

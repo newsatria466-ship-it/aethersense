@@ -44,35 +44,42 @@ class HomeTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = context.watch<TelemetryController>();
     final telemetry = controller.telemetry;
+    final hasData = controller.hasData && telemetry != null;
     final isConnected = controller.connectionStatus.toString().contains('connected');
 
-    final temp = telemetry?.temperatureC ?? 28.0;
-    final humidity = telemetry?.humidityPercent ?? 68.0;
-    final mq135 = telemetry?.mq135Raw ?? 45;
+    final temp = telemetry?.temperatureC;
+    final humidity = telemetry?.humidityPercent;
+    final mq135 = telemetry?.mq135Raw;
     final isRaining = telemetry?.isRaining ?? false;
-    final waterLevel = telemetry?.waterLevelCm ?? 12.0;
+    final waterLevel = telemetry?.waterLevelCm;
     final isFloodWarning = telemetry?.isFloodWarning ?? false;
     final isAirPolluted = telemetry?.isGasPolluted ?? false;
 
     // Safety status
-    final bool isAllSafe = isConnected && !isFloodWarning && !isAirPolluted;
+    final bool isAllSafe = isConnected && hasData && !isFloodWarning && !isAirPolluted;
     final String cityStatusTitle = !isConnected
         ? 'Offline'
-        : (isFloodWarning || isAirPolluted)
-            ? 'Perlu Perhatian'
-            : 'Aman';
+        : !hasData
+            ? 'Sinkronisasi'
+            : (isFloodWarning || isAirPolluted)
+                ? 'Perlu Perhatian'
+                : 'Aman';
     final String cityStatusSubtitle = !isConnected
-        ? 'Menunggu sinyal MQTT broker'
-        : isFloodWarning
-            ? 'Waspada potensi genangan air'
-            : isAirPolluted
-                ? 'Indeks udara terdeteksi menurun'
-                : 'Semua sistem terpantau normal';
+        ? 'Menghubungkan ke broker MQTT...'
+        : !hasData
+            ? 'Terhubung ke broker, menanti data sensor ESP32...'
+            : isFloodWarning
+                ? 'Waspada potensi genangan air sungai'
+                : isAirPolluted
+                    ? 'Indeks udara terdeteksi menurun'
+                    : 'Semua sistem terpantau normal';
     final Color statusColor = !isConnected
         ? AppColors.warning
-        : isAllSafe
-            ? AppColors.green
-            : AppColors.danger;
+        : !hasData
+            ? AppColors.cyan
+            : isAllSafe
+                ? AppColors.green
+                : AppColors.danger;
 
     final totalParking = controller.parkingTotalSlots;
     final availableParking = controller.parkingAvailableSlots;
@@ -320,7 +327,9 @@ class HomeTab extends StatelessWidget {
                                               ),
                                               const SizedBox(width: 5),
                                               Text(
-                                                '${temp.toStringAsFixed(0)}°C ${isRaining ? "Hujan" : "Cerah Berawan"}',
+                                                hasData
+                                                    ? '${temp!.toStringAsFixed(0)}°C ${isRaining ? "Hujan" : "Cerah Berawan"}'
+                                                    : (isConnected ? 'Sinkronisasi...' : 'Offline'),
                                                 style: GoogleFonts.plusJakartaSans(
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w600,
@@ -510,9 +519,11 @@ class HomeTab extends StatelessWidget {
                               iconColor: AppColors.cyan,
                               iconBg: AppColors.cyan.withValues(alpha: 0.12),
                               label: 'Suhu Udara',
-                              value: '${temp.toStringAsFixed(1)}°C',
-                              statusBadge: temp > 33 ? 'Panas' : 'Normal',
-                              badgeColor: temp > 33 ? AppColors.warning : AppColors.green,
+                              value: hasData ? '${temp!.toStringAsFixed(1)}°C' : '--°C',
+                              statusBadge: hasData ? (temp! > 33 ? 'Panas' : 'Normal') : 'Menunggu',
+                              badgeColor: hasData
+                                  ? (temp! > 33 ? AppColors.warning : AppColors.green)
+                                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                               onTap: () => onNavigateToTab(1),
                             ),
                           ),
@@ -525,9 +536,11 @@ class HomeTab extends StatelessWidget {
                               iconColor: const Color(0xFF0284C7),
                               iconBg: const Color(0xFF0284C7).withValues(alpha: 0.12),
                               label: 'Kelembaban',
-                              value: '${humidity.toStringAsFixed(0)}%',
-                              statusBadge: 'Optimal',
-                              badgeColor: AppColors.green,
+                              value: hasData ? '${humidity!.toStringAsFixed(0)}%' : '--%',
+                              statusBadge: hasData ? 'Optimal' : 'Menunggu',
+                              badgeColor: hasData
+                                  ? AppColors.green
+                                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                               onTap: () => onNavigateToTab(1),
                             ),
                           ),
@@ -546,9 +559,11 @@ class HomeTab extends StatelessWidget {
                               iconColor: isAirPolluted ? AppColors.warning : AppColors.green,
                               iconBg: (isAirPolluted ? AppColors.warning : AppColors.green).withValues(alpha: 0.12),
                               label: 'Kualitas Udara',
-                              value: '$mq135 PPM',
-                              statusBadge: isAirPolluted ? 'Perlu Waspada' : 'Udara Bersih',
-                              badgeColor: isAirPolluted ? AppColors.warning : AppColors.green,
+                              value: hasData ? '$mq135 PPM' : '-- PPM',
+                              statusBadge: hasData ? (isAirPolluted ? 'Perlu Waspada' : 'Udara Bersih') : 'Menunggu',
+                              badgeColor: hasData
+                                  ? (isAirPolluted ? AppColors.warning : AppColors.green)
+                                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                               onTap: () => onNavigateToTab(1),
                             ),
                           ),
@@ -561,9 +576,11 @@ class HomeTab extends StatelessWidget {
                               iconColor: isRaining ? const Color(0xFF2563EB) : Colors.amber.shade700,
                               iconBg: (isRaining ? const Color(0xFF2563EB) : Colors.amber).withValues(alpha: 0.12),
                               label: 'Status Hujan',
-                              value: isRaining ? 'Hujan' : 'Cerah',
-                              statusBadge: isRaining ? 'Basah' : 'Kering',
-                              badgeColor: isRaining ? AppColors.cyan : AppColors.green,
+                              value: hasData ? (isRaining ? 'Hujan' : 'Cerah') : '--',
+                              statusBadge: hasData ? (isRaining ? 'Basah' : 'Kering') : 'Menunggu',
+                              badgeColor: hasData
+                                  ? (isRaining ? AppColors.cyan : AppColors.green)
+                                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                               onTap: () => onNavigateToTab(1),
                             ),
                           ),
@@ -686,7 +703,7 @@ class HomeTab extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      '${waterLevel.toStringAsFixed(0)} cm',
+                                      hasData ? '${waterLevel!.toStringAsFixed(0)} cm' : '-- cm',
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w800,
@@ -696,15 +713,21 @@ class HomeTab extends StatelessWidget {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: (isFloodWarning ? AppColors.danger : AppColors.green).withValues(alpha: 0.12),
+                                        color: hasData
+                                            ? (isFloodWarning ? AppColors.danger : AppColors.green).withValues(alpha: 0.12)
+                                            : (isDark ? AppColors.surfaceDark : Colors.grey.shade100),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        isFloodWarning ? 'Waspada Banjir' : 'Bebas Banjir',
+                                        hasData
+                                            ? (isFloodWarning ? 'Waspada Banjir' : 'Bebas Banjir')
+                                            : 'Menunggu Data',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
-                                          color: isFloodWarning ? AppColors.danger : AppColors.green,
+                                          color: hasData
+                                              ? (isFloodWarning ? AppColors.danger : AppColors.green)
+                                              : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
                                         ),
                                       ),
                                     ),

@@ -26,6 +26,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
   late int _previousIndex;
   final PageStorageBucket _bucket = PageStorageBucket();
+  double _horizontalDragDistance = 0.0;
 
   @override
   void initState() {
@@ -105,24 +106,49 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         bucket: _bucket,
         child: Stack(
           children: [
-            // Dynamic Transition Body
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 320),
-              layoutBuilder: (currentChild, previousChildren) {
-                return Stack(
-                  fit: StackFit.expand,
-                  children: <Widget>[
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
-                );
+            // Gesture-Enabled Dynamic Transition Body (Swipe anywhere horizontally to change tabs)
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragStart: (_) {
+                _horizontalDragDistance = 0.0;
               },
-              transitionBuilder: (child, animation) {
-                final isIncoming = (child.key as ValueKey<int>?)?.value == _currentIndex;
-                final targetIndex = _currentIndex;
+              onHorizontalDragUpdate: (details) {
+                _horizontalDragDistance += details.primaryDelta ?? 0.0;
+              },
+              onHorizontalDragEnd: (details) {
+                final velocity = details.primaryVelocity ?? 0.0;
+                const velocityThreshold = 220.0;
+                const distanceThreshold = 55.0;
 
-                // PILIHAN 1 (Beranda & Monitoring): Smooth Fade-Through & Depth Scale
-                if (targetIndex == 0 || targetIndex == 1) {
+                // Geser ke kiri (swipe left) -> tab berikutnya
+                if (velocity < -velocityThreshold || _horizontalDragDistance < -distanceThreshold) {
+                  if (_currentIndex < 3) {
+                    _onTabTapped(_currentIndex + 1);
+                  }
+                }
+                // Geser ke kanan (swipe right) -> tab sebelumnya
+                else if (velocity > velocityThreshold || _horizontalDragDistance > distanceThreshold) {
+                  if (_currentIndex > 0) {
+                    _onTabTapped(_currentIndex - 1);
+                  }
+                }
+                _horizontalDragDistance = 0.0;
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 320),
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: <Widget>[
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
+                transitionBuilder: (child, animation) {
+                  final isIncoming = (child.key as ValueKey<int>?)?.value == _currentIndex;
+
+                  // Smooth Fade-Through & Depth Scale across ALL tabs (Beranda, Monitoring, Parkir, PJU)
                   if (isIncoming) {
                     return FadeTransition(
                       opacity: CurvedAnimation(
@@ -156,47 +182,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       ),
                     );
                   }
-                }
-
-                // PILIHAN 2 (Parkir & PJU): Directional Shared-Axis Slide + Fade
-                final isForward = _currentIndex >= _previousIndex;
-                if (isIncoming) {
-                  final beginOffset = isForward ? const Offset(0.20, 0.0) : const Offset(-0.20, 0.0);
-                  return SlideTransition(
-                    position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                    child: FadeTransition(
-                      opacity: CurvedAnimation(
-                        parent: animation,
-                        curve: const Interval(0.15, 1.0, curve: Curves.easeOut),
-                      ),
-                      child: child,
-                    ),
-                  );
-                } else {
-                  final endOffset = isForward ? const Offset(-0.20, 0.0) : const Offset(0.20, 0.0);
-                  return SlideTransition(
-                    position: Tween<Offset>(begin: Offset.zero, end: endOffset).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeInCubic,
-                      ),
-                    ),
-                    child: FadeTransition(
-                      opacity: CurvedAnimation(
-                        parent: animation,
-                        curve: const Interval(0.0, 0.45, curve: Curves.easeIn),
-                      ),
-                      child: child,
-                    ),
-                  );
-                }
-              },
-              child: _buildTabContent(_currentIndex),
+                },
+                child: _buildTabContent(_currentIndex),
+              ),
             ),
 
             // Bottom Navigation Bar with Sliding Liquid Magnetic Pill Accent
@@ -211,6 +199,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
   }
+
 
   Widget _buildBottomNavigationBar(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

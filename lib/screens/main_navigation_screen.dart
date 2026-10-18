@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/update_service.dart';
 import '../../theme/app_theme.dart';
@@ -23,23 +24,18 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
-  late final PageController _pageController;
+  late int _previousIndex;
+  final PageStorageBucket _bucket = PageStorageBucket();
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
+    _previousIndex = widget.initialIndex;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUpdateSilently();
     });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   Future<void> _checkUpdateSilently() async {
@@ -55,64 +51,186 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _onTabTapped(int index) {
     if (_currentIndex != index) {
+      HapticFeedback.selectionClick();
       setState(() {
+        _previousIndex = _currentIndex;
         _currentIndex = index;
       });
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-      );
+    }
+  }
+
+  Widget _buildTabContent(int index) {
+    switch (index) {
+      case 0:
+        return KeyedSubtree(
+          key: const ValueKey<int>(0),
+          child: HomeTab(
+            key: const PageStorageKey('home_tab'),
+            onNavigateToTab: _onTabTapped,
+          ),
+        );
+      case 1:
+        return const KeyedSubtree(
+          key: ValueKey<int>(1),
+          child: MonitoringTab(
+            key: PageStorageKey('monitoring_tab'),
+          ),
+        );
+      case 2:
+        return const KeyedSubtree(
+          key: ValueKey<int>(2),
+          child: ParkingTab(
+            key: PageStorageKey('parking_tab'),
+          ),
+        );
+      case 3:
+        return const KeyedSubtree(
+          key: ValueKey<int>(3),
+          child: LampTab(
+            key: PageStorageKey('lamp_tab'),
+          ),
+        );
+      default:
+        return const SizedBox();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            physics: const BouncingScrollPhysics(),
-            children: [
-              HomeTab(onNavigateToTab: _onTabTapped),
-              const MonitoringTab(),
-              const ParkingTab(),
-              const LampTab(),
-            ],
-          ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-          // Bottom Navigation Bar with Active Pill Accent
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildBottomNavigationBar(context),
-          ),
-        ],
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
+      body: PageStorage(
+        bucket: _bucket,
+        child: Stack(
+          children: [
+            // Dynamic Transition Body
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 320),
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              transitionBuilder: (child, animation) {
+                final isIncoming = (child.key as ValueKey<int>?)?.value == _currentIndex;
+                final targetIndex = _currentIndex;
+
+                // PILIHAN 1 (Beranda & Monitoring): Smooth Fade-Through & Depth Scale
+                if (targetIndex == 0 || targetIndex == 1) {
+                  if (isIncoming) {
+                    return FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+                      ),
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.94, end: 1.0).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                        child: child,
+                      ),
+                    );
+                  } else {
+                    return FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(0.0, 0.45, curve: Curves.easeIn),
+                      ),
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 1.0, end: 0.96).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeIn,
+                          ),
+                        ),
+                        child: child,
+                      ),
+                    );
+                  }
+                }
+
+                // PILIHAN 2 (Parkir & PJU): Directional Shared-Axis Slide + Fade
+                final isForward = _currentIndex >= _previousIndex;
+                if (isIncoming) {
+                  final beginOffset = isForward ? const Offset(0.20, 0.0) : const Offset(-0.20, 0.0);
+                  return SlideTransition(
+                    position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                    child: FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(0.15, 1.0, curve: Curves.easeOut),
+                      ),
+                      child: child,
+                    ),
+                  );
+                } else {
+                  final endOffset = isForward ? const Offset(-0.20, 0.0) : const Offset(0.20, 0.0);
+                  return SlideTransition(
+                    position: Tween<Offset>(begin: Offset.zero, end: endOffset).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeInCubic,
+                      ),
+                    ),
+                    child: FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(0.0, 0.45, curve: Curves.easeIn),
+                      ),
+                      child: child,
+                    ),
+                  );
+                }
+              },
+              child: _buildTabContent(_currentIndex),
+            ),
+
+            // Bottom Navigation Bar with Sliding Liquid Magnetic Pill Accent
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _buildBottomNavigationBar(context),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBottomNavigationBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        border: const Border(
-          top: BorderSide(color: AppColors.border, width: 1),
+        color: isDark
+            ? const Color(0xFF0F172A).withValues(alpha: 0.96)
+            : Colors.white.withValues(alpha: 0.96),
+        border: Border(
+          top: BorderSide(
+            color: isDark ? AppColors.borderDark : AppColors.border,
+            width: 1,
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
+            color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.06),
+            blurRadius: 18,
             offset: const Offset(0, -4),
           ),
         ],
@@ -121,34 +239,68 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         top: false,
         child: Padding(
           padding: EdgeInsets.fromLTRB(12, 8, 12, bottomPadding > 0 ? 4 : 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                index: 0,
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                label: 'Beranda',
-              ),
-              _buildNavItem(
-                index: 1,
-                icon: Icons.eco_outlined,
-                activeIcon: Icons.eco_rounded,
-                label: 'Monitoring',
-              ),
-              _buildNavItem(
-                index: 2,
-                icon: Icons.directions_car_outlined,
-                activeIcon: Icons.directions_car_filled_rounded,
-                label: 'Parkir',
-              ),
-              _buildNavItem(
-                index: 3,
-                icon: Icons.lightbulb_outline_rounded,
-                activeIcon: Icons.lightbulb_rounded,
-                label: 'PJU',
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final totalWidth = constraints.maxWidth;
+              final itemWidth = totalWidth / 4;
+
+              return SizedBox(
+                height: 56,
+                child: Stack(
+                  children: [
+                    // 1. Sliding Liquid Magnetic Pill Indicator
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeOutBack, // Responsive elastic spring feel
+                      left: _currentIndex * itemWidth + 4,
+                      width: itemWidth - 8,
+                      top: 2,
+                      bottom: 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.cyan.withValues(alpha: isDark ? 0.22 : 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.cyan.withValues(alpha: isDark ? 0.40 : 0.25),
+                            width: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // 2. Navigation Items Row
+                    Row(
+                      children: [
+                        _buildNavItem(
+                          index: 0,
+                          icon: Icons.home_outlined,
+                          activeIcon: Icons.home_rounded,
+                          label: 'Beranda',
+                        ),
+                        _buildNavItem(
+                          index: 1,
+                          icon: Icons.eco_outlined,
+                          activeIcon: Icons.eco_rounded,
+                          label: 'Monitoring',
+                        ),
+                        _buildNavItem(
+                          index: 2,
+                          icon: Icons.directions_car_outlined,
+                          activeIcon: Icons.directions_car_filled_rounded,
+                          label: 'Parkir',
+                        ),
+                        _buildNavItem(
+                          index: 3,
+                          icon: Icons.lightbulb_outline_rounded,
+                          activeIcon: Icons.lightbulb_rounded,
+                          label: 'PJU',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -166,26 +318,30 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return Expanded(
       child: PressableScale(
+        scaleDownFactor: 0.90,
         onTap: () => _onTabTapped(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.cyan.withValues(alpha: 0.12)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
+        child: Container(
+          color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (child, anim) => ScaleTransition(
-                  scale: anim,
-                  child: child,
-                ),
+              // Micro-Bounce Pop Icon
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: isSelected ? 1.0 : 0.0),
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutBack,
+                builder: (context, animValue, child) {
+                  final scale = 1.0 + (0.16 * animValue);
+                  final yOffset = -2.0 * animValue;
+                  return Transform.translate(
+                    offset: Offset(0, yOffset),
+                    child: Transform.scale(
+                      scale: scale,
+                      child: child,
+                    ),
+                  );
+                },
                 child: Icon(
                   isSelected ? activeIcon : icon,
                   key: ValueKey<bool>(isSelected),
@@ -193,9 +349,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   size: 22,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
                 style: TextStyle(
                   fontSize: 11,
                   fontFamily: 'Plus Jakarta Sans',
@@ -215,3 +372,4 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 }
+

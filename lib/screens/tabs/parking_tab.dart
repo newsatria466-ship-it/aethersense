@@ -17,15 +17,147 @@ class ParkingTab extends StatefulWidget {
 class _ParkingTabState extends State<ParkingTab> {
   final GlobalKey<ParkingLotVisualizerState> _visualizerKey = GlobalKey<ParkingLotVisualizerState>();
 
+  // Standalone Playground / Manual Mode state (Active by default for interactive sandbox play)
+  bool _isManualMode = true;
+  final Set<int> _manualOccupiedSlots = {1, 3, 7};
+  bool _manualEntryGateOpen = false;
+  bool _manualExitGateOpen = false;
+  bool _manualIrEntryActive = false;
+  bool _manualIrExitActive = false;
+
+  void _handleManualCarEntry({int? preferredSlot}) {
+    if (_manualOccupiedSlots.length >= 9) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.danger,
+          content: Text('Semua slot parkir sudah penuh (9/9)!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    int target = 0;
+    if (preferredSlot != null && !_manualOccupiedSlots.contains(preferredSlot)) {
+      target = preferredSlot;
+    } else {
+      for (int i = 1; i <= 9; i++) {
+        if (!_manualOccupiedSlots.contains(i)) {
+          target = i;
+          break;
+        }
+      }
+    }
+
+    if (target == 0) return;
+
+    setState(() {
+      _manualIrEntryActive = true;
+      _manualEntryGateOpen = true;
+    });
+
+    _visualizerKey.currentState?.animateCarEnteringSlot(target);
+
+    // Add slot to occupied set
+    setState(() {
+      _manualOccupiedSlots.add(target);
+    });
+
+    // Auto-close entry gate after car parks
+    Future.delayed(const Duration(milliseconds: 2600), () {
+      if (mounted) {
+        setState(() {
+          _manualEntryGateOpen = false;
+          _manualIrEntryActive = false;
+        });
+      }
+    });
+  }
+
+  void _handleManualCarExit({int? targetSlot}) {
+    if (_manualOccupiedSlots.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.warning,
+          content: Text('Area parkir kosong, tidak ada mobil yang bisa keluar.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final toRemove = targetSlot ?? _manualOccupiedSlots.last;
+
+    setState(() {
+      _manualOccupiedSlots.remove(toRemove);
+      _manualIrExitActive = true;
+      _manualExitGateOpen = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.cyan,
+        content: Text('Mobil di Slot P$toRemove keluar melewati gerbang OUT.'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (mounted) {
+        setState(() {
+          _manualExitGateOpen = false;
+          _manualIrExitActive = false;
+        });
+      }
+    });
+  }
+
+  void _handleManualFillAll() {
+    setState(() {
+      for (int i = 1; i <= 9; i++) {
+        _manualOccupiedSlots.add(i);
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: AppColors.green,
+        content: Text('Semua 9 slot terisi dengan mobil warna-warni!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleManualClearAll() {
+    setState(() {
+      _manualOccupiedSlots.clear();
+      _manualEntryGateOpen = false;
+      _manualExitGateOpen = false;
+      _manualIrEntryActive = false;
+      _manualIrExitActive = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: AppColors.cyan,
+        content: Text('Seluruh area parkir telah dikosongkan (0/9).'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Consumer<TelemetryController>(
       builder: (context, controller, child) {
-        final total = controller.parkingTotalSlots;
-        final occupied = controller.parkingOccupiedSlots;
-        final available = controller.parkingAvailableSlots;
+        // Resolve values based on whether user is in Manual/Playground mode or MQTT Live Mode
+        const total = 9;
+        final occupied = _isManualMode ? _manualOccupiedSlots.length : controller.parkingOccupiedSlots;
+        final available = total - occupied;
+        final isEntryGateOpen = _isManualMode ? _manualEntryGateOpen : controller.isEntryGateOpen;
+        final isExitGateOpen = _isManualMode ? _manualExitGateOpen : controller.isExitGateOpen;
+        final isIrEntryActive = _isManualMode ? _manualIrEntryActive : controller.isIrEntryDetected;
+        final isIrExitActive = _isManualMode ? _manualIrExitActive : controller.isIrExitDetected;
         final isOnline = controller.connectionStatus.toString().contains('connected');
         final percentAvailable = ((available / (total == 0 ? 1 : total)) * 100).toInt();
 
@@ -36,95 +168,123 @@ class _ParkingTabState extends State<ParkingTab> {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // Header Bar
+                // Header Bar with Mode Toggle
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Smart Parking 2D',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              'Denah Real-Time & Sensor IR',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: (isOnline ? AppColors.green : AppColors.warning).withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: isOnline ? AppColors.green : AppColors.warning,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    isOnline ? 'Online' : 'Offline',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: isOnline ? AppColors.green : AppColors.warning,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Reset button
-                            PressableScale(
-                              onTap: controller.isResettingParking
-                                  ? null
-                                  : () => _confirmReset(context, controller),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: isDark ? AppColors.surfaceDark : Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isDark ? AppColors.borderDark : AppColors.border,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Smart Parking 2D',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.3,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.refresh_rounded, size: 14, color: AppColors.cyan),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Reset',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.cyan,
+                                Text(
+                                  _isManualMode ? 'Mode Sandbox / Mainan Bebas' : 'Sinkronisasi Telemetry MQTT',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: _isManualMode ? AppColors.cyan : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                // Mode Toggle Button
+                                PressableScale(
+                                  onTap: () {
+                                    setState(() {
+                                      _isManualMode = !_isManualMode;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: _isManualMode ? AppColors.cyan : AppColors.green,
+                                        content: Text(
+                                          _isManualMode
+                                              ? 'Mode Mainan (Manual) Aktif: Bebas klik mobil, slot, dan gerbang!'
+                                              : 'Mode Broker MQTT Aktif: Data mengikuti sensor ESP32.',
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: (_isManualMode ? AppColors.cyan : AppColors.green).withValues(alpha: 0.14),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: (_isManualMode ? AppColors.cyan : AppColors.green).withValues(alpha: 0.35),
                                       ),
                                     ),
-                                  ],
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _isManualMode ? Icons.sports_esports_rounded : Icons.sensors_rounded,
+                                          size: 15,
+                                          color: _isManualMode ? AppColors.cyan : AppColors.green,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          _isManualMode ? 'Manual' : 'MQTT',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: _isManualMode ? AppColors.cyan : AppColors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                // Reset button
+                                PressableScale(
+                                  onTap: () {
+                                    if (_isManualMode) {
+                                      _handleManualClearAll();
+                                    } else {
+                                      _confirmReset(context, controller);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? AppColors.surfaceDark : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isDark ? AppColors.borderDark : AppColors.border,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.refresh_rounded, size: 14, color: AppColors.cyan),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Reset',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.cyan,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -226,22 +386,24 @@ class _ParkingTabState extends State<ParkingTab> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: (controller.isIrEntryDetected || controller.isIrExitDetected
+                                    color: (isIrEntryActive || isIrExitActive
                                             ? AppColors.cyan
-                                            : AppColors.green)
+                                            : (_isManualMode ? AppColors.cyan : (isOnline ? AppColors.green : AppColors.warning)))
                                         .withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    controller.isIrEntryDetected
-                                        ? '⚡ IR MASUK DETEKSI'
-                                        : (controller.isIrExitDetected ? '⚡ IR KELUAR DETEKSI' : '● SENSOR STANDBY'),
+                                    isIrEntryActive
+                                        ? '⚡ IR MASUK AKTIF'
+                                        : (isIrExitActive
+                                            ? '⚡ IR KELUAR AKTIF'
+                                            : (_isManualMode ? '🎮 MODE MAINAN' : (isOnline ? '● MQTT LIVE' : '● OFFLINE'))),
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w700,
-                                      color: controller.isIrEntryDetected || controller.isIrExitDetected
+                                      color: isIrEntryActive || isIrExitActive
                                           ? AppColors.cyan
-                                          : AppColors.green,
+                                          : (_isManualMode ? AppColors.cyan : (isOnline ? AppColors.green : AppColors.warning)),
                                     ),
                                   ),
                                 ),
@@ -253,17 +415,30 @@ class _ParkingTabState extends State<ParkingTab> {
                             ParkingLotVisualizer(
                               key: _visualizerKey,
                               occupiedCount: occupied,
+                              occupiedSlots: _isManualMode ? _manualOccupiedSlots : null,
                               totalCount: total,
-                              isEntryGateOpen: controller.isEntryGateOpen,
-                              isExitGateOpen: controller.isExitGateOpen,
+                              isEntryGateOpen: isEntryGateOpen,
+                              isExitGateOpen: isExitGateOpen,
                               onSlotTap: (slot, isOccupied) {
                                 _showSlotDetailModal(context, slot, isOccupied, controller, isDark);
                               },
                               onEntryGateTap: () {
-                                controller.toggleEntryGate();
+                                if (_isManualMode) {
+                                  setState(() {
+                                    _manualEntryGateOpen = !_manualEntryGateOpen;
+                                  });
+                                } else {
+                                  controller.toggleEntryGate();
+                                }
                               },
                               onExitGateTap: () {
-                                controller.toggleExitGate();
+                                if (_isManualMode) {
+                                  setState(() {
+                                    _manualExitGateOpen = !_manualExitGateOpen;
+                                  });
+                                } else {
+                                  controller.toggleExitGate();
+                                }
                               },
                             ),
 
@@ -273,11 +448,11 @@ class _ParkingTabState extends State<ParkingTab> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _buildLegendItem(AppColors.green, 'Kosong / Siap Parkir'),
+                                _buildLegendItem(AppColors.green, 'Kosong'),
                                 const SizedBox(width: 14),
-                                _buildLegendItem(AppColors.danger, 'Terisi (Ada Mobil)'),
+                                _buildLegendItem(AppColors.danger, 'Ada Mobil'),
                                 const SizedBox(width: 14),
-                                _buildLegendItem(AppColors.cyan, 'Palang Gerbang'),
+                                _buildLegendItem(AppColors.cyan, 'Palang Pintu (Sentuh)'),
                               ],
                             ),
                           ],
@@ -287,7 +462,7 @@ class _ParkingTabState extends State<ParkingTab> {
                   ),
                 ),
 
-                // Interactive Quick Actions & Simulation Panel
+                // Interactive Quick Actions & Simulation Panel (Sandbox Playground)
                 SliverToBoxAdapter(
                   child: StaggeredEntrance(
                     index: 2,
@@ -316,7 +491,7 @@ class _ParkingTabState extends State<ParkingTab> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Simulasi & Kontrol Gerbang',
+                                  'Kontrol Interaktif & Mainan',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w700,
@@ -324,27 +499,33 @@ class _ParkingTabState extends State<ParkingTab> {
                                   ),
                                 ),
                                 Text(
-                                  'Ketuk untuk Uji Animasi',
+                                  _isManualMode ? 'Mode Manual Bebas' : 'Mode Broker',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 10.5,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                    color: AppColors.cyan,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            // Action Buttons Row
+
+                            // Action Buttons: Car In & Car Out
                             Row(
                               children: [
-                                // Simulasi Masuk
+                                // Mobil Masuk
                                 Expanded(
                                   child: PressableScale(
                                     onTap: occupied >= total
                                         ? null
                                         : () {
-                                            final nextSlot = occupied + 1;
-                                            _visualizerKey.currentState?.animateCarEnteringSlot(nextSlot);
-                                            controller.simulateCarEntry();
+                                            if (_isManualMode) {
+                                              _handleManualCarEntry();
+                                            } else {
+                                              final nextSlot = occupied + 1;
+                                              _visualizerKey.currentState?.animateCarEnteringSlot(nextSlot);
+                                              controller.simulateCarEntry();
+                                            }
                                           },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -365,7 +546,7 @@ class _ParkingTabState extends State<ParkingTab> {
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            'Mobil Masuk',
+                                            'Mobil Masuk (+)',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 11.5,
                                               fontWeight: FontWeight.w700,
@@ -378,13 +559,17 @@ class _ParkingTabState extends State<ParkingTab> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                // Simulasi Keluar
+                                // Mobil Keluar
                                 Expanded(
                                   child: PressableScale(
                                     onTap: occupied <= 0
                                         ? null
                                         : () {
-                                            controller.simulateCarExit();
+                                            if (_isManualMode) {
+                                              _handleManualCarExit();
+                                            } else {
+                                              controller.simulateCarExit();
+                                            }
                                           },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -405,11 +590,84 @@ class _ParkingTabState extends State<ParkingTab> {
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            'Mobil Keluar',
+                                            'Mobil Keluar (-)',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 11.5,
                                               fontWeight: FontWeight.w700,
                                               color: occupied <= 0 ? Colors.grey : AppColors.danger,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // Sandbox Quick Fill & Empty Buttons
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: PressableScale(
+                                    onTap: _handleManualFillAll,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.cyan.withValues(alpha: 0.10),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: AppColors.cyan.withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.grid_view_rounded, size: 14, color: AppColors.cyan),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            'Isi Semua (9 Mobil)',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.cyan,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: PressableScale(
+                                    onTap: _handleManualClearAll,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? AppColors.surfaceDark : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isDark ? AppColors.borderDark : AppColors.border,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.delete_sweep_rounded,
+                                            size: 15,
+                                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            'Kosongkan Semua',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                                             ),
                                           ),
                                         ],
@@ -436,18 +694,34 @@ class _ParkingTabState extends State<ParkingTab> {
                         children: [
                           _buildGateCard(
                             title: 'Gerbang Masuk (IN)',
-                            subtitle: 'Servo Palang IN & Sensor IR Masuk',
-                            isOpen: controller.isEntryGateOpen,
+                            subtitle: isEntryGateOpen ? 'Palang Terbuka (Kendaraan Boleh Masuk)' : 'Palang Tertutup (Standby Sensor)',
+                            isOpen: isEntryGateOpen,
                             isDark: isDark,
-                            onToggle: () => controller.toggleEntryGate(),
+                            onToggle: () {
+                              if (_isManualMode) {
+                                setState(() {
+                                  _manualEntryGateOpen = !_manualEntryGateOpen;
+                                });
+                              } else {
+                                controller.toggleEntryGate();
+                              }
+                            },
                           ),
                           const SizedBox(height: 10),
                           _buildGateCard(
                             title: 'Gerbang Keluar (OUT)',
-                            subtitle: 'Servo Palang OUT & Sensor IR Keluar',
-                            isOpen: controller.isExitGateOpen,
+                            subtitle: isExitGateOpen ? 'Palang Terbuka (Kendaraan Boleh Keluar)' : 'Palang Tertutup (Standby Sensor)',
+                            isOpen: isExitGateOpen,
                             isDark: isDark,
-                            onToggle: () => controller.toggleExitGate(),
+                            onToggle: () {
+                              if (_isManualMode) {
+                                setState(() {
+                                  _manualExitGateOpen = !_manualExitGateOpen;
+                                });
+                              } else {
+                                controller.toggleExitGate();
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -828,7 +1102,11 @@ class _ParkingTabState extends State<ParkingTab> {
               PressableScale(
                 onTap: () {
                   Navigator.pop(ctx);
-                  controller.simulateCarExit();
+                  if (_isManualMode) {
+                    _handleManualCarExit(targetSlot: slot.id);
+                  } else {
+                    controller.simulateCarExit();
+                  }
                 },
                 child: Container(
                   width: double.infinity,
@@ -889,8 +1167,12 @@ class _ParkingTabState extends State<ParkingTab> {
               PressableScale(
                 onTap: () {
                   Navigator.pop(ctx);
-                  _visualizerKey.currentState?.animateCarEnteringSlot(slot.id);
-                  controller.simulateCarEntry();
+                  if (_isManualMode) {
+                    _handleManualCarEntry(preferredSlot: slot.id);
+                  } else {
+                    _visualizerKey.currentState?.animateCarEnteringSlot(slot.id);
+                    controller.simulateCarEntry();
+                  }
                 },
                 child: Container(
                   width: double.infinity,

@@ -34,6 +34,7 @@ class ParkingSlotConfig {
 
 class ParkingLotVisualizer extends StatefulWidget {
   final int occupiedCount;
+  final Set<int>? occupiedSlots;
   final int totalCount;
   final bool isEntryGateOpen;
   final bool isExitGateOpen;
@@ -44,6 +45,7 @@ class ParkingLotVisualizer extends StatefulWidget {
   const ParkingLotVisualizer({
     super.key,
     required this.occupiedCount,
+    this.occupiedSlots,
     this.totalCount = 9,
     this.isEntryGateOpen = false,
     this.isExitGateOpen = false,
@@ -219,8 +221,13 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
   @override
   void didUpdateWidget(ParkingLotVisualizer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If occupied count increased from outside (e.g. real MQTT event), trigger drive-in animation
-    if (widget.occupiedCount > oldWidget.occupiedCount && !_isDrivingCar) {
+    // If occupied count increased from outside (e.g. real MQTT event or manual), trigger drive-in animation
+    if (widget.occupiedSlots != null && oldWidget.occupiedSlots != null) {
+      final diff = widget.occupiedSlots!.difference(oldWidget.occupiedSlots!);
+      if (diff.isNotEmpty && !_isDrivingCar) {
+        animateCarEnteringSlot(diff.first);
+      }
+    } else if (widget.occupiedCount > oldWidget.occupiedCount && !_isDrivingCar) {
       final targetSlotId = widget.occupiedCount;
       if (targetSlotId <= slots.length) {
         animateCarEnteringSlot(targetSlotId);
@@ -407,9 +414,11 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
 
   /// Build individual parking bay overlay with top-down car and LED corner indicators
   Widget _buildParkingSlot(ParkingSlotConfig slot, double totalW, double totalH) {
-    // A slot is occupied if its slot number <= occupiedCount
-    // But if currently being driven in, keep it pending until arrival
-    final isOccupied = slot.id <= widget.occupiedCount &&
+    final bool isBaseOccupied = widget.occupiedSlots != null
+        ? widget.occupiedSlots!.contains(slot.id)
+        : slot.id <= widget.occupiedCount;
+
+    final isOccupied = isBaseOccupied &&
         !(_isDrivingCar && _simulatedTargetSlot == slot.id && _driveProgress.value < 0.95);
 
     final slotLeft = slot.leftRatio * totalW;

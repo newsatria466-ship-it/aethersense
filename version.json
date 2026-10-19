@@ -1,6 +1,6 @@
 {
-  "version": "1.0.24",
-  "versionCode": 25,
-  "changelog": "• Denah Parkir 2D Realistis: Tampilan visual parkir kini menggunakan denah presisi 9 slot lengkap dengan marka jalan, panah arah, dan gerbang palang IN & OUT otomatis.\n• Model Mobil Nyata Top-Down: Slot parkir yang terisi otomatis menampilkan sprite mobil warna-warni beresolusi tinggi dengan bayangan aspal realistis.\n• Animasi Mobil Masuk: Animasi mobil bergerak masuk melewati gerbang IN hingga parkir mulus ke slot yang tersedia.\n• Palang Pintu Servo Interaktif: Visual palang gerbang garis merah-putih yang membuka/menutup halus terhubung langsung ke sensor IR dan kontrol manual.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.24/app-release.apk"
+  "version": "1.0.25",
+  "versionCode": 26,
+  "changelog": "• Mode Mainan / Sandbox Manual: Fitur parkir kini mendukung kontrol manual interaktif penuh tanpa terikat koneksi MQTT broker.\n• Kontrol Slot Bebas: Ketuk slot kosong mana saja untuk memarkirkan mobil dengan animasi mengemudi nyata, atau ketuk slot terisi untuk mengeluarkan mobil.\n• Tombol Interaktif Baru: Tombol cepat Mobil Masuk (+), Mobil Keluar (-), Isi Semua 9 Mobil, dan Kosongkan Semua.\n• Palang Pintu Interaktif: Ketuk langsung palang gerbang IN/OUT di denah peta atau gunakan tombol kontrol untuk membuka/menutup servo.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.25/app-release.apk"
 }

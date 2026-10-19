@@ -64,9 +64,9 @@ class TelemetryData {
     this.relay2 = false,
     this.relay3 = false,
     this.relay4 = false,
-    this.parkingTotalSlots = 10,
+    this.parkingTotalSlots = 9,
     this.parkingOccupiedSlots = 0,
-    this.parkingAvailableSlots = 10,
+    this.parkingAvailableSlots = 9,
     this.isParkingFull = false,
     this.entryGateOpen = false,
     this.exitGateOpen = false,
@@ -74,6 +74,47 @@ class TelemetryData {
     this.irExitDetected = false,
     DateTime? receivedAt,
   }) : receivedAt = receivedAt ?? DateTime.now();
+
+  factory TelemetryData.empty() {
+    return TelemetryData(
+      deviceId: 'ESP32-UNKNOWN',
+      sequence: 0,
+      timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      uptimeSeconds: 0,
+      temperatureC: 0.0,
+      humidityPercent: 0.0,
+      mq135Raw: 0,
+      mq135AdcMv: 0,
+      mq135SensorMv: 0.0,
+      airQualityStatus: 'Normal / Cukup Baik',
+      isGasPolluted: false,
+      rainRaw: 4095,
+      rainStatus: 'Kering',
+      isRaining: false,
+      waterDistanceCm: 0.0,
+      waterLevelCm: 0.0,
+      floodStatus: 'Aman',
+      isFloodWarning: false,
+      wifiRssiDbm: -50,
+      ldrRaw: 2000,
+      ambientLight: 'Terang',
+      isDark: false,
+      lightingMode: 'auto',
+      relay1: false,
+      relay2: false,
+      relay3: false,
+      relay4: false,
+      parkingTotalSlots: 9,
+      parkingOccupiedSlots: 0,
+      parkingAvailableSlots: 9,
+      isParkingFull: false,
+      entryGateOpen: false,
+      exitGateOpen: false,
+      irEntryDetected: false,
+      irExitDetected: false,
+      receivedAt: DateTime.now(),
+    );
+  }
 
   /// Parse double safely from num, String, or null
   static double _parseDouble(dynamic val, [double fallback = 0.0]) {
@@ -229,8 +270,8 @@ class TelemetryData {
       if (rl.length > 3) r4 = _parseBool(rl[3]);
     }
 
-    // Smart Parking Telemetry (10 Slots Kapasitas)
-    final totalSlots = _parseInt(json['parking_total_slots'] ?? json['total_slots'], 10);
+    // Smart Parking Telemetry (9 Slots Kapasitas sesuai layout fisik)
+    final totalSlots = _parseInt(json['parking_total_slots'] ?? json['total_slots'], 9);
     final occupiedSlots = _parseInt(json['parking_occupied_slots'] ?? json['occupied_slots'], 0);
     final availSlots = _parseInt(json['parking_available_slots'] ?? json['available_slots'], totalSlots - occupiedSlots);
     final parkFull = _parseBool(json['is_parking_full'] ?? (occupiedSlots >= totalSlots));

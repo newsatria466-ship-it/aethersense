@@ -65,11 +65,11 @@ class TelemetryController extends ChangeNotifier {
   bool get isDark => _latestTelemetry?.isDark ?? false;
   bool get isPendingModeChange => _isPendingModeChange;
 
-  // Smart Parking Getters
-  int get parkingTotalSlots => _latestTelemetry?.parkingTotalSlots ?? 10;
+  // Smart Parking Getters (9 Slots sesuai denah fisik)
+  int get parkingTotalSlots => _latestTelemetry?.parkingTotalSlots ?? 9;
   int get parkingOccupiedSlots => _latestTelemetry?.parkingOccupiedSlots ?? 0;
-  int get parkingAvailableSlots => _latestTelemetry?.parkingAvailableSlots ?? 10;
-  bool get isParkingFull => _latestTelemetry?.isParkingFull ?? false;
+  int get parkingAvailableSlots => _latestTelemetry?.parkingAvailableSlots ?? (parkingTotalSlots - parkingOccupiedSlots);
+  bool get isParkingFull => _latestTelemetry?.isParkingFull ?? (parkingOccupiedSlots >= parkingTotalSlots);
   bool get isEntryGateOpen => _latestTelemetry?.entryGateOpen ?? false;
   bool get isExitGateOpen => _latestTelemetry?.exitGateOpen ?? false;
   bool get isIrEntryDetected => _latestTelemetry?.irEntryDetected ?? false;
@@ -312,6 +312,125 @@ class TelemetryController extends ChangeNotifier {
     });
 
     return success;
+  }
+
+  /// Toggle or set Entry Gate (Gerbang Masuk)
+  Future<bool> toggleEntryGate({bool? state}) async {
+    final newState = state ?? !isEntryGateOpen;
+    if (_latestTelemetry != null) {
+      _latestTelemetry = _latestTelemetry!.copyWith(entryGateOpen: newState);
+      notifyListeners();
+    }
+
+    final payloadMap = {
+      'type': 'gate_control',
+      'gate': 'entry',
+      'state': newState,
+    };
+    final payloadJson = jsonEncode(payloadMap);
+    final devId = activeDeviceId;
+    bool success = false;
+    if (devId != null && devId.isNotEmpty && !devId.contains('UNKNOWN')) {
+      final topic = 'aethersense/$devId/command';
+      success = _mqttService.publish(topic, payloadJson);
+      _mqttService.publish('aethersense/command', payloadJson);
+    } else {
+      success = _mqttService.publish('aethersense/command', payloadJson);
+    }
+    return success;
+  }
+
+  /// Toggle or set Exit Gate (Gerbang Keluar)
+  Future<bool> toggleExitGate({bool? state}) async {
+    final newState = state ?? !isExitGateOpen;
+    if (_latestTelemetry != null) {
+      _latestTelemetry = _latestTelemetry!.copyWith(exitGateOpen: newState);
+      notifyListeners();
+    }
+
+    final payloadMap = {
+      'type': 'gate_control',
+      'gate': 'exit',
+      'state': newState,
+    };
+    final payloadJson = jsonEncode(payloadMap);
+    final devId = activeDeviceId;
+    bool success = false;
+    if (devId != null && devId.isNotEmpty && !devId.contains('UNKNOWN')) {
+      final topic = 'aethersense/$devId/command';
+      success = _mqttService.publish(topic, payloadJson);
+      _mqttService.publish('aethersense/command', payloadJson);
+    } else {
+      success = _mqttService.publish('aethersense/command', payloadJson);
+    }
+    return success;
+  }
+
+  /// Simulate car entry: opens gate, occupies next slot, then auto-closes gate
+  void simulateCarEntry() {
+    final current = parkingOccupiedSlots;
+    final total = parkingTotalSlots;
+    if (current < total) {
+      final next = current + 1;
+      if (_latestTelemetry != null) {
+        _latestTelemetry = _latestTelemetry!.copyWith(
+          parkingOccupiedSlots: next,
+          parkingAvailableSlots: total - next,
+          isParkingFull: next >= total,
+          entryGateOpen: true,
+          irEntryDetected: true,
+        );
+      } else {
+        _latestTelemetry = TelemetryData.empty().copyWith(
+          parkingTotalSlots: total,
+          parkingOccupiedSlots: next,
+          parkingAvailableSlots: total - next,
+          isParkingFull: next >= total,
+          entryGateOpen: true,
+          irEntryDetected: true,
+        );
+      }
+      notifyListeners();
+
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        if (_latestTelemetry != null) {
+          _latestTelemetry = _latestTelemetry!.copyWith(
+            entryGateOpen: false,
+            irEntryDetected: false,
+          );
+          notifyListeners();
+        }
+      });
+    }
+  }
+
+  /// Simulate car exit: opens exit gate, vacates a slot, then auto-closes gate
+  void simulateCarExit() {
+    final current = parkingOccupiedSlots;
+    final total = parkingTotalSlots;
+    if (current > 0) {
+      final next = current - 1;
+      if (_latestTelemetry != null) {
+        _latestTelemetry = _latestTelemetry!.copyWith(
+          parkingOccupiedSlots: next,
+          parkingAvailableSlots: total - next,
+          isParkingFull: false,
+          exitGateOpen: true,
+          irExitDetected: true,
+        );
+      }
+      notifyListeners();
+
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        if (_latestTelemetry != null) {
+          _latestTelemetry = _latestTelemetry!.copyWith(
+            exitGateOpen: false,
+            irExitDetected: false,
+          );
+          notifyListeners();
+        }
+      });
+    }
   }
 
   void _handleIncomingDeviceStatus(Map<String, dynamic> json) {

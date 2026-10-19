@@ -1,6 +1,6 @@
 {
-  "version": "1.0.23",
-  "versionCode": 24,
-  "changelog": "• Navigasi Gestur Geser Layar: Kini Anda bisa berpindah antar tab (Beranda, Monitoring, Parkir, PJU) cukup dengan menggeser/swipe layar ke kiri atau kanan tanpa harus menyentuh navbar bawah.\n• Transisi Layar Halus Seragam: Efek Smooth Depth Scale & Fade yang elegan kini diterapkan merata ke seluruh halaman aplikasi.\n• Sinkronisasi Indikator Navbar: Indikator kapsul dan getaran haptic otomatis mengikuti pergeseran layar dengan presisi.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.23/app-release.apk"
+  "version": "1.0.24",
+  "versionCode": 25,
+  "changelog": "• Denah Parkir 2D Realistis: Tampilan visual parkir kini menggunakan denah presisi 9 slot lengkap dengan marka jalan, panah arah, dan gerbang palang IN & OUT otomatis.\n• Model Mobil Nyata Top-Down: Slot parkir yang terisi otomatis menampilkan sprite mobil warna-warni beresolusi tinggi dengan bayangan aspal realistis.\n• Animasi Mobil Masuk: Animasi mobil bergerak masuk melewati gerbang IN hingga parkir mulus ke slot yang tersedia.\n• Palang Pintu Servo Interaktif: Visual palang gerbang garis merah-putih yang membuka/menutup halus terhubung langsung ke sensor IR dan kontrol manual.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.24/app-release.apk"
 }

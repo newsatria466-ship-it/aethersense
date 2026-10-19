@@ -24,7 +24,6 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
-  late int _previousIndex;
   final PageStorageBucket _bucket = PageStorageBucket();
   double _horizontalDragDistance = 0.0;
 
@@ -32,7 +31,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-    _previousIndex = widget.initialIndex;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUpdateSilently();
@@ -54,7 +52,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_currentIndex != index) {
       HapticFeedback.selectionClick();
       setState(() {
-        _previousIndex = _currentIndex;
         _currentIndex = index;
       });
     }

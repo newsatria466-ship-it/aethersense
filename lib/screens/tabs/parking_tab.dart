@@ -1053,13 +1053,16 @@ class _ParkingTabState extends State<ParkingTab> {
                 ),
                 child: Row(
                   children: [
-                    // Car sprite thumbnail
+                    // Car sprite thumbnail (oriented facing upwards)
                     SizedBox(
                       width: 50,
                       height: 70,
-                      child: Image.asset(
-                        slot.carAsset,
-                        fit: BoxFit.contain,
+                      child: Transform.rotate(
+                        angle: 3.141592653589793,
+                        child: Image.asset(
+                          slot.carAsset,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),

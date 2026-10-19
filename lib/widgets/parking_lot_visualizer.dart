@@ -70,9 +70,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1914,
       heightRatio: 0.3175,
       isTopRow: true,
-      carAsset: 'assets/images/cars/car_1.png',
-      carModelName: 'White Sedan',
-      plateNumber: 'G 1042 TG',
+      carAsset: 'assets/images/cars/vehicle_1.png',
+      carModelName: 'Mitsubishi L300 Pickup',
+      plateNumber: 'G 1300 PK',
     ),
     ParkingSlotConfig(
       id: 2,
@@ -82,9 +82,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1895,
       heightRatio: 0.3175,
       isTopRow: true,
-      carAsset: 'assets/images/cars/car_2.png',
-      carModelName: 'Black Executive',
-      plateNumber: 'G 8820 AA',
+      carAsset: 'assets/images/cars/vehicle_2.png',
+      carModelName: 'Porsche 919 Hybrid',
+      plateNumber: 'G 919 PR',
     ),
     ParkingSlotConfig(
       id: 3,
@@ -94,9 +94,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1914,
       heightRatio: 0.3175,
       isTopRow: true,
-      carAsset: 'assets/images/cars/car_3.png',
-      carModelName: 'Silver Coupe',
-      plateNumber: 'G 3190 BB',
+      carAsset: 'assets/images/cars/vehicle_3.png',
+      carModelName: 'Truk Box MBG (Gizi Gratis)',
+      plateNumber: 'G 2026 BG',
     ),
     ParkingSlotConfig(
       id: 4,
@@ -106,9 +106,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1914,
       heightRatio: 0.3175,
       isTopRow: true,
-      carAsset: 'assets/images/cars/car_4.png',
-      carModelName: 'Sport Crimson',
-      plateNumber: 'G 4512 TT',
+      carAsset: 'assets/images/cars/vehicle_4.png',
+      carModelName: 'Nissan GT-R R35 Nismo',
+      plateNumber: 'G 3535 GT',
     ),
     ParkingSlotConfig(
       id: 5,
@@ -118,9 +118,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1914,
       heightRatio: 0.3175,
       isTopRow: true,
-      carAsset: 'assets/images/cars/car_5.png',
-      carModelName: 'Electric Blue',
-      plateNumber: 'G 9021 ZA',
+      carAsset: 'assets/images/cars/vehicle_5.png',
+      carModelName: 'Honda NSX-R',
+      plateNumber: 'G 9901 XR',
     ),
     // Bottom Row: 6 to 9
     ParkingSlotConfig(
@@ -131,9 +131,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1768,
       heightRatio: 0.3515,
       isTopRow: false,
-      carAsset: 'assets/images/cars/car_7.png',
-      carModelName: 'Dark Grey SUV',
-      plateNumber: 'G 7741 BG',
+      carAsset: 'assets/images/cars/vehicle_6.png',
+      carModelName: 'Jet Tempur Stealth',
+      plateNumber: 'TNI-AU 06',
     ),
     ParkingSlotConfig(
       id: 7,
@@ -143,9 +143,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1689,
       heightRatio: 0.3515,
       isTopRow: false,
-      carAsset: 'assets/images/cars/car_8.png',
-      carModelName: 'Sunset Orange',
-      plateNumber: 'G 2108 LK',
+      carAsset: 'assets/images/cars/vehicle_7.png',
+      carModelName: 'Red Bull Racing RB19 F1',
+      plateNumber: 'F1-VER 01',
     ),
     ParkingSlotConfig(
       id: 8,
@@ -155,9 +155,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1689,
       heightRatio: 0.3515,
       isTopRow: false,
-      carAsset: 'assets/images/cars/car_10.png',
-      carModelName: 'Lime Green GT',
-      plateNumber: 'G 5519 PT',
+      carAsset: 'assets/images/cars/vehicle_8.png',
+      carModelName: 'Rolls-Royce Phantom V',
+      plateNumber: 'G 1 VIP',
     ),
     ParkingSlotConfig(
       id: 9,
@@ -167,9 +167,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       widthRatio: 0.1719,
       heightRatio: 0.3515,
       isTopRow: false,
-      carAsset: 'assets/images/cars/car_11.png',
-      carModelName: 'Blue Pickup',
-      plateNumber: 'G 6400 DD',
+      carAsset: 'assets/images/cars/vehicle_9.png',
+      carModelName: 'VW Beetle Klasik (Kodok)',
+      plateNumber: 'G 1968 VW',
     ),
   ];
 
@@ -254,43 +254,53 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
 
   /// Calculate position and heading along waypoint path
   Map<String, double> _calculateDrivePath(double t, ParkingSlotConfig target) {
-    // Stage 1: (0.0 to 0.25) -> Enter from IN gate: from (0.78, 0.98) to (0.78, 0.65)
-    // Stage 2: (0.25 to 0.45) -> Drive into center driving lane: to (0.78, 0.46)
-    // Stage 3: (0.45 to 0.80) -> Turn left and drive west along center lane: to (target.centerX, 0.46)
-    // Stage 4: (0.80 to 1.00) -> Steer into slot: to (target.centerX, target.centerY)
+    // Stage 1: (0.00 to 0.25) -> Enter from IN gate: from (0.78, 0.98) to (0.78, 0.65)
+    // Stage 2: (0.25 to 0.45) -> Drive into center lane & smooth left turn: to (0.78, 0.46)
+    // Stage 3: (0.45 to 0.78) -> Drive west along center lane: to (target.centerX, 0.46)
+    // Stage 4: (0.78 to 1.00) -> Steer smoothly into parking slot: to (target.centerX, target.centerY)
 
     double x = 0.78;
     double y = 0.98;
-    double angle = 0.0; // facing UP
+    // In native images, front points DOWN (+Y). Moving UP (-Y) requires angle = math.pi
+    double angle = math.pi;
 
     if (t < 0.25) {
       final segT = t / 0.25;
       x = 0.78;
       y = 0.98 - segT * (0.98 - 0.65);
-      angle = 0.0;
+      angle = math.pi; // Facing UP (direction of forward travel)
     } else if (t < 0.45) {
       final segT = (t - 0.25) / 0.20;
       x = 0.78;
       y = 0.65 - segT * (0.65 - 0.46);
-      angle = 0.0;
-    } else if (t < 0.80) {
-      final segT = (t - 0.45) / 0.35;
+      if (segT > 0.5) {
+        // Smoothly corner-turn left into the west lane: from math.pi to math.pi / 2
+        final turnT = (segT - 0.5) / 0.5;
+        angle = math.pi - turnT * (math.pi / 2);
+      } else {
+        angle = math.pi;
+      }
+    } else if (t < 0.78) {
+      final segT = (t - 0.45) / 0.33;
       const startX = 0.78;
       final endX = target.centerX;
       x = startX + segT * (endX - startX);
       y = 0.46;
-      angle = -math.pi / 2; // facing WEST (left)
+      angle = math.pi / 2; // Facing WEST (direction of forward travel along lane)
     } else {
-      final segT = (t - 0.80) / 0.20;
+      final segT = (t - 0.78) / 0.22;
       x = target.centerX;
+      final turnT = (segT * 2.0).clamp(0.0, 1.0);
       if (target.isTopRow) {
         // Drive north into top bay
         y = 0.46 - segT * (0.46 - target.centerY);
-        angle = 0.0; // facing UP
+        // Smoothly steer from west (pi / 2) to north (pi)
+        angle = (math.pi / 2) + turnT * (math.pi / 2);
       } else {
         // Drive south into bottom bay
         y = 0.46 + segT * (target.centerY - 0.46);
-        angle = math.pi; // facing DOWN
+        // Smoothly steer from west (pi / 2) to south (0.0)
+        angle = (math.pi / 2) - turnT * (math.pi / 2);
       }
     }
 
@@ -477,8 +487,9 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
                       slideOffset.dy * slotH,
                     ),
                     child: Transform.rotate(
-                      // Top row faces UP (0), bottom row faces DOWN (180 deg / pi)
-                      angle: slot.isTopRow ? 0.0 : math.pi,
+                      // In native PNG, vehicle front is DOWN (+Y).
+                      // Top row parks facing UP (math.pi), bottom row parks facing DOWN (0.0)
+                      angle: slot.isTopRow ? math.pi : 0.0,
                       child: Opacity(
                         opacity: animVal.clamp(0.0, 1.0),
                         child: SizedBox(

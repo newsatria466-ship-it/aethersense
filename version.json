@@ -1,6 +1,6 @@
 {
-  "version": "1.0.25",
-  "versionCode": 26,
-  "changelog": "• Mode Mainan / Sandbox Manual: Fitur parkir kini mendukung kontrol manual interaktif penuh tanpa terikat koneksi MQTT broker.\n• Kontrol Slot Bebas: Ketuk slot kosong mana saja untuk memarkirkan mobil dengan animasi mengemudi nyata, atau ketuk slot terisi untuk mengeluarkan mobil.\n• Tombol Interaktif Baru: Tombol cepat Mobil Masuk (+), Mobil Keluar (-), Isi Semua 9 Mobil, dan Kosongkan Semua.\n• Palang Pintu Interaktif: Ketuk langsung palang gerbang IN/OUT di denah peta atau gunakan tombol kontrol untuk membuka/menutup servo.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.25/app-release.apk"
+  "version": "1.0.26",
+  "versionCode": 27,
+  "changelog": "• Lineup Kendaraan Baru: Menggunakan 9 objek kendaraan unik kualitas tinggi (Mitsubishi L300, Porsche 919 Hybrid, Truk Box MBG, Nissan GT-R Nismo, Honda NSX-R, Jet Tempur Stealth, Red Bull Racing RB19 F1, Rolls-Royce Phantom V, dan VW Beetle Klasik).\n• Penyesuaian Arah & Heading Realistis: Arah hadap kendaraan otomatis disesuaikan secara natural (menghadap ke depan saat melaju di gerbang, berbelok mulus di lorong tengah, dan parkir menghadap depan ke dalam slot).\n• Detail Kendaraan Interaktif: Modal detail parkir kini menampilkan nama model kendaraan spesifik, plat nomor, dan preview orientasi tegak showroom.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.26/app-release.apk"
 }

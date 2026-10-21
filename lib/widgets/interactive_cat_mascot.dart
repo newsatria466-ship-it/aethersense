@@ -408,9 +408,10 @@ class _CatHeadAndBodyPainter extends CustomPainter {
   void _draw3DEars(Canvas canvas, double cx, double cy) {
     // --- LEFT EAR (Slate Grey Patch side with 3D gradient) ---
     final leftEarPath = Path();
-    leftEarPath.moveTo(cx - 64, cy - 24);
-    leftEarPath.lineTo(cx - 82, cy - 76); // Tip of left ear
-    leftEarPath.quadraticBezierTo(cx - 40, cy - 64, cx - 24, cy - 46);
+    leftEarPath.moveTo(cx - 34, cy - 46);
+    leftEarPath.quadraticBezierTo(cx - 52, cy - 70, cx - 78, cy - 88); // inner curve to tip
+    leftEarPath.quadraticBezierTo(cx - 86, cy - 86, cx - 84, cy - 76); // rounded tip
+    leftEarPath.quadraticBezierTo(cx - 80, cy - 48, cx - 64, cy - 22); // outer curve to cheek
     leftEarPath.close();
 
     final leftEarRect = leftEarPath.getBounds();
@@ -419,19 +420,19 @@ class _CatHeadAndBodyPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0xFF5D6F82), // 3D highlight
-          Color(0xFF455566),
-          Color(0xFF334151), // Ambient shadow
+          Color(0xFF64748B), // Slate grey 500
+          Color(0xFF475569), // Slate grey 600
+          Color(0xFF334155), // Slate grey 700
         ],
       ).createShader(leftEarRect);
 
     canvas.drawPath(leftEarPath, leftEarPaint);
 
-    // Left Inner Ear (Muted pink cavity)
+    // Left Inner Ear (Warm pastel peach cavity)
     final leftInnerEar = Path();
-    leftInnerEar.moveTo(cx - 58, cy - 28);
-    leftInnerEar.lineTo(cx - 72, cy - 68);
-    leftInnerEar.quadraticBezierTo(cx - 42, cy - 56, cx - 32, cy - 44);
+    leftInnerEar.moveTo(cx - 40, cy - 44);
+    leftInnerEar.quadraticBezierTo(cx - 54, cy - 64, cx - 74, cy - 78);
+    leftInnerEar.quadraticBezierTo(cx - 76, cy - 58, cx - 62, cy - 28);
     leftInnerEar.close();
 
     canvas.drawPath(
@@ -449,9 +450,10 @@ class _CatHeadAndBodyPainter extends CustomPainter {
 
     // --- RIGHT EAR (Soft White/Cream side with 3D gradient) ---
     final rightEarPath = Path();
-    rightEarPath.moveTo(cx + 64, cy - 24);
-    rightEarPath.lineTo(cx + 82, cy - 76); // Tip of right ear
-    rightEarPath.quadraticBezierTo(cx + 40, cy - 64, cx + 24, cy - 46);
+    rightEarPath.moveTo(cx + 34, cy - 46);
+    rightEarPath.quadraticBezierTo(cx + 52, cy - 70, cx + 78, cy - 88);
+    rightEarPath.quadraticBezierTo(cx + 86, cy - 86, cx + 84, cy - 76);
+    rightEarPath.quadraticBezierTo(cx + 80, cy - 48, cx + 64, cy - 22);
     rightEarPath.close();
 
     final rightEarRect = rightEarPath.getBounds();
@@ -470,9 +472,9 @@ class _CatHeadAndBodyPainter extends CustomPainter {
 
     // Right Inner Ear (Cute pastel pink cavity)
     final rightInnerEar = Path();
-    rightInnerEar.moveTo(cx + 58, cy - 28);
-    rightInnerEar.lineTo(cx + 72, cy - 68);
-    rightInnerEar.quadraticBezierTo(cx + 42, cy - 56, cx + 32, cy - 44);
+    rightInnerEar.moveTo(cx + 40, cy - 44);
+    rightInnerEar.quadraticBezierTo(cx + 54, cy - 64, cx + 74, cy - 78);
+    rightInnerEar.quadraticBezierTo(cx + 76, cy - 58, cx + 62, cy - 28);
     rightInnerEar.close();
 
     canvas.drawPath(
@@ -490,26 +492,30 @@ class _CatHeadAndBodyPainter extends CustomPainter {
   }
 
   void _draw3DHead(Canvas canvas, double cx, double cy) {
-    // 35-40% LARGER HEAD: Width ~164px, Height ~118px!
-    final headWidth = 162.0 + (1.0 - headLiftProgress) * 8.0;
-    final headHeight = 118.0 - (1.0 - headLiftProgress) * 5.0;
+    // Sculpted Organic Head Shape with chubby cheeks matching reference
+    final cheekPuff = (1.0 - headLiftProgress) * 4.0;
+    
+    final headPath = Path();
+    headPath.moveTo(cx, cy - 54);
+    headPath.quadraticBezierTo(cx + 38, cy - 54, cx + 62, cy - 40);
+    headPath.quadraticBezierTo(cx + 74, cy - 24, cx + 82 + cheekPuff, cy + 4);
+    headPath.quadraticBezierTo(cx + 90 + cheekPuff, cy + 26, cx + 76, cy + 45);
+    headPath.quadraticBezierTo(cx + 42, cy + 56, cx, cy + 54);
+    headPath.quadraticBezierTo(cx - 42, cy + 56, cx - 76, cy + 45);
+    headPath.quadraticBezierTo(cx - 90 - cheekPuff, cy + 26, cx - 82 - cheekPuff, cy + 4);
+    headPath.quadraticBezierTo(cx - 74, cy - 24, cx - 62, cy - 40);
+    headPath.quadraticBezierTo(cx - 38, cy - 54, cx, cy - 54);
+    headPath.close();
 
-    final headRect = RRect.fromRectAndCorners(
-      Rect.fromCenter(center: Offset(cx, cy), width: headWidth, height: headHeight),
-      topLeft: const Radius.circular(66),
-      topRight: const Radius.circular(66),
-      bottomLeft: const Radius.circular(58),
-      bottomRight: const Radius.circular(58),
-    );
+    final headBounds = headPath.getBounds();
 
-    // Soft 3D drop shadow behind head
+    // 1. Soft 3D drop shadow behind head
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.11)
+      ..color = Colors.black.withValues(alpha: 0.12)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
-    canvas.drawRRect(headRect.shift(const Offset(0, 5)), shadowPaint);
+    canvas.drawPath(headPath.shift(const Offset(0, 5)), shadowPaint);
 
-    // Base fur: 3D Volumetric Radial Gradient (Key light from top-left)
-    final headGradientRect = headRect.outerRect;
+    // 2. Base fur: 3D Volumetric Radial Gradient (Key light from top-left)
     final baseHeadPaint = Paint()
       ..shader = const RadialGradient(
         center: Alignment(-0.25, -0.35),
@@ -521,19 +527,20 @@ class _CatHeadAndBodyPainter extends CustomPainter {
           Color(0xFFE9DECf), // Ambient occlusion shadow at base/chin
         ],
         stops: [0.0, 0.45, 0.82, 1.0],
-      ).createShader(headGradientRect);
+      ).createShader(headBounds);
 
-    canvas.drawRRect(headRect, baseHeadPaint);
+    canvas.drawPath(headPath, baseHeadPaint);
 
-    // Left Ear & Forehead Slate Grey 3D Patch
+    // 3. Left Ear & Forehead Slate Grey 3D Patch (Asymmetrical, matching reference image!)
     canvas.save();
-    canvas.clipRRect(headRect);
+    canvas.clipPath(headPath);
 
     final patchPath = Path();
-    patchPath.moveTo(cx - 90, cy - 75);
-    patchPath.lineTo(cx - 8, cy - 75);
-    patchPath.quadraticBezierTo(cx - 10, cy - 14, cx - 48, cy + 6);
-    patchPath.quadraticBezierTo(cx - 88, cy - 5, cx - 90, cy - 20);
+    patchPath.moveTo(cx - 32, cy - 56);
+    patchPath.quadraticBezierTo(cx - 16, cy - 26, cx - 22, cy + 2);
+    patchPath.quadraticBezierTo(cx - 46, cy + 10, cx - 88, cy + 2);
+    patchPath.lineTo(cx - 98, cy - 44);
+    patchPath.lineTo(cx - 32, cy - 56);
     patchPath.close();
 
     final patchRect = patchPath.getBounds();
@@ -542,9 +549,9 @@ class _CatHeadAndBodyPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0xFF5D6F82),
-          Color(0xFF455566),
-          Color(0xFF334151),
+          Color(0xFF64748B),
+          Color(0xFF475569),
+          Color(0xFF334155),
         ],
       ).createShader(patchRect);
 
@@ -572,8 +579,8 @@ class _CatHeadAndBodyPainter extends CustomPainter {
   void _draw3DEyes(Canvas canvas, double cx, double cy) {
     final eyeCenterY = cy - 4;
     const eyeDistX = 31.0;
-    const eyeWidth = 26.0;
-    const eyeHeight = 32.0;
+    const eyeWidth = 27.0;
+    const eyeHeight = 33.0;
 
     final leftEyeCenter = Offset(cx - eyeDistX, eyeCenterY);
     final rightEyeCenter = Offset(cx + eyeDistX, eyeCenterY);
@@ -588,7 +595,7 @@ class _CatHeadAndBodyPainter extends CustomPainter {
     // 1. LEFT EYE
     if (!leftEyeCovered) {
       if (isSleeping || isSuccess) {
-        _draw3DClosedEye(canvas, leftEyeCenter, isHappy: isSuccess);
+        _draw3DClosedEye(canvas, leftEyeCenter, isHappy: isSuccess, isLeftEye: true);
       } else {
         _draw3DOpenEye(
           canvas,
@@ -605,7 +612,7 @@ class _CatHeadAndBodyPainter extends CustomPainter {
     // 2. RIGHT EYE
     if (!rightEyeCovered) {
       if (isSleeping || (isSuccess && coverProgress < 0.5)) {
-        _draw3DClosedEye(canvas, rightEyeCenter, isHappy: isSuccess);
+        _draw3DClosedEye(canvas, rightEyeCenter, isHappy: isSuccess, isLeftEye: false);
       } else {
         final effectiveLook = (coverProgress > 0.5 && peekProgress > 0.4) ? 0.35 : lookProgress;
         _draw3DOpenEye(
@@ -732,7 +739,7 @@ class _CatHeadAndBodyPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _draw3DClosedEye(Canvas canvas, Offset center, {required bool isHappy}) {
+  void _draw3DClosedEye(Canvas canvas, Offset center, {required bool isHappy, required bool isLeftEye}) {
     final arcPaint = Paint()
       ..color = const Color(0xFF334155)
       ..style = PaintingStyle.stroke
@@ -744,10 +751,18 @@ class _CatHeadAndBodyPainter extends CustomPainter {
       path.moveTo(center.dx - 12, center.dy + 4);
       path.quadraticBezierTo(center.dx, center.dy - 8, center.dx + 12, center.dy + 4);
     } else {
-      // Cozy blissful sleeping eye line with natural cat flick
-      path.moveTo(center.dx - 13, center.dy - 1);
-      path.quadraticBezierTo(center.dx, center.dy + 9.5, center.dx + 11, center.dy - 0.5);
-      path.quadraticBezierTo(center.dx + 13, center.dy - 2.5, center.dx + 15, center.dy - 4.5);
+      // Cozy blissful sleeping eye line matching storyboard panel 1
+      if (isLeftEye) {
+        path.moveTo(center.dx + 11, center.dy + 2);
+        path.quadraticBezierTo(center.dx, center.dy + 11, center.dx - 11, center.dy + 2);
+        // Outer lash flicking towards the left
+        path.quadraticBezierTo(center.dx - 13.5, center.dy - 0.5, center.dx - 15.5, center.dy - 3.5);
+      } else {
+        path.moveTo(center.dx - 11, center.dy + 2);
+        path.quadraticBezierTo(center.dx, center.dy + 11, center.dx + 11, center.dy + 2);
+        // Outer lash flicking towards the right
+        path.quadraticBezierTo(center.dx + 13.5, center.dy - 0.5, center.dx + 15.5, center.dy - 3.5);
+      }
     }
     canvas.drawPath(path, arcPaint);
   }
@@ -853,11 +868,11 @@ class _CatPawsForegroundPainter extends CustomPainter {
     // Resting Paws Position:
     // Sitting directly ON TOP of the white card's upper rim (cardRimY),
     // hooking slightly over the front edge of the card!
-    const pawWidth = 46.0;
+    const pawWidth = 48.0;
     const pawHeight = 36.0;
 
-    final restLeftPaw = Offset(cx - 52, cardRimY - pawHeight * 0.38);
-    final restRightPaw = Offset(cx + 52, cardRimY - pawHeight * 0.38);
+    final restLeftPaw = Offset(cx - 48, cardRimY - pawHeight * 0.38);
+    final restRightPaw = Offset(cx + 48, cardRimY - pawHeight * 0.38);
 
     // Eye covering positions (covering eyes at cx ± 31, eyeY ~86)
     final sleepDip = (1.0 - headLiftProgress) * 9.0;

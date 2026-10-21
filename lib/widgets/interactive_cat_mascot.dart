@@ -37,12 +37,14 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
   late AnimationController _happyAnimController; // Success celebration
   late AnimationController _blinkAnimController; // Natural idle blinking
   late AnimationController _wobbleAnimController; // Subtle breathing/idle
+  late AnimationController _headPoseAnimController; // Head lifting from sleep
 
   // Animated values
   late Animation<double> _coverAnimation;
   late Animation<double> _peekAnimation;
   late Animation<double> _happyAnimation;
   late Animation<double> _blinkAnimation;
+  late Animation<double> _headPoseAnimation;
 
   // Smooth pupil tracking interpolation
   double _currentLookProgress = 0.5;
@@ -82,7 +84,7 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
       curve: Curves.elasticOut,
     );
 
-    // 4. Idle natural blink (loops every 3.5s with a quick 180ms blink)
+    // 4. Idle natural blink (loops every 3.2s with a quick 180ms blink)
     _blinkAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3200),
@@ -93,11 +95,21 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 4),
     ]).animate(_blinkAnimController);
 
-    // 5. Idle breathing wobble
+    // 5. Idle breathing wobble (gentle rhythmic breathing)
     _wobbleAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 2400),
     )..repeat(reverse: true);
+
+    // 6. Head posture animation (lifting up from nestled sleep pose when waking)
+    _headPoseAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _headPoseAnimation = CurvedAnimation(
+      parent: _headPoseAnimController,
+      curve: Curves.easeOutCubic,
+    );
 
     _updateStateAnimations(widget.state, isInit: true);
   }
@@ -112,6 +124,13 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
   }
 
   void _updateStateAnimations(CatMascotState state, {bool isInit = false}) {
+    // Manage head posture: nestled sleeping pose (0.0) vs alert raised pose (1.0)
+    if (state == CatMascotState.idle) {
+      _headPoseAnimController.reverse();
+    } else {
+      _headPoseAnimController.forward();
+    }
+
     switch (state) {
       case CatMascotState.passwordHidden:
         _coverAnimController.forward();
@@ -147,6 +166,7 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
     _happyAnimController.dispose();
     _blinkAnimController.dispose();
     _wobbleAnimController.dispose();
+    _headPoseAnimController.dispose();
     super.dispose();
   }
 
@@ -166,11 +186,12 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
             _happyAnimation,
             _blinkAnimation,
             _wobbleAnimController,
+            _headPoseAnimation,
           ]),
           builder: (context, child) {
             return CustomPaint(
-              size: Size(widget.size * 1.25, widget.size),
-              painter: _CatMascotPainter(
+              size: Size(widget.size * 1.30, widget.size),
+              painter: _CatMascot3DPainter(
                 state: widget.state,
                 lookProgress: lookVal,
                 coverProgress: _coverAnimation.value,
@@ -178,6 +199,7 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
                 happyProgress: _happyAnimation.value,
                 blinkProgress: _blinkAnimation.value,
                 breathProgress: _wobbleAnimController.value,
+                headLiftProgress: _headPoseAnimation.value,
               ),
             );
           },
@@ -187,7 +209,7 @@ class _InteractiveCatMascotState extends State<InteractiveCatMascot>
   }
 }
 
-class _CatMascotPainter extends CustomPainter {
+class _CatMascot3DPainter extends CustomPainter {
   final CatMascotState state;
   final double lookProgress;
   final double coverProgress;
@@ -195,8 +217,9 @@ class _CatMascotPainter extends CustomPainter {
   final double happyProgress;
   final double blinkProgress;
   final double breathProgress;
+  final double headLiftProgress; // 0.0 = nestled sleeping pose, 1.0 = alert upright
 
-  _CatMascotPainter({
+  _CatMascot3DPainter({
     required this.state,
     required this.lookProgress,
     required this.coverProgress,
@@ -204,185 +227,279 @@ class _CatMascotPainter extends CustomPainter {
     required this.happyProgress,
     required this.blinkProgress,
     required this.breathProgress,
+    required this.headLiftProgress,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
-    // Breathing motion shifts head vertically by ~1.5px
-    final cy = size.height * 0.58 + (state == CatMascotState.idle ? breathProgress * 1.8 : 0.0);
-    final cardEdgeY = size.height * 0.96; // Where the cat touches the top of the card
+
+    // Card rim reference: The bottom edge where the cat rests onto the white card
+    final cardEdgeY = size.height * 0.94;
+
+    // Head vertical positioning:
+    // When sleeping (headLiftProgress = 0), the head dips down by ~6px so the chin
+    // nestles comfortably between the paws. When alert (1.0), it lifts up slightly.
+    final sleepDip = (1.0 - headLiftProgress) * 6.5;
+    final breathOffset = state == CatMascotState.idle ? breathProgress * 1.6 : 0.0;
+    final cy = size.height * 0.54 + sleepDip + breathOffset;
 
     // 1. Draw Decorative Accents (Sleep Zzz, Error Sweat/Question, Success Confetti)
     _drawDecorations(canvas, cx, cy);
 
-    // 2. Ears
-    _drawEars(canvas, cx, cy);
+    // 2. Ears with 3D Depth & Gradients
+    _draw3DEars(canvas, cx, cy);
 
-    // 3. Head & Grey Patch
-    _drawHead(canvas, cx, cy);
+    // 3. Volumetric 3D Head & Soft Shading
+    _draw3DHead(canvas, cx, cy);
 
-    // 4. Blushing Cheeks
+    // 4. Soft Blushing Airbrush Cheeks
     _drawCheeks(canvas, cx, cy);
 
-    // 5. Eyes & Pupils
-    _drawEyes(canvas, cx, cy);
+    // 5. 3D Glossy Anime Eyes & Pupils
+    _draw3DEyes(canvas, cx, cy);
 
-    // 6. Nose & Mouth
+    // 6. 3D Button Nose & Expressive Cat Mouth
     _drawNoseAndMouth(canvas, cx, cy);
 
-    // 7. Paws / Hands (Layered on top to cover eyes or rest on card edge)
-    _drawPaws(canvas, cx, cy, cardEdgeY);
+    // 7. 3D Chubby Paws resting/hanging naturally over the card edge
+    _draw3DPaws(canvas, cx, cy, cardEdgeY);
   }
 
   void _drawDecorations(Canvas canvas, double cx, double cy) {
     if (state == CatMascotState.idle) {
-      // Draw gentle blue "Zzz"
+      // Soft glowing blue "Zzz"
       final textPainter = TextPainter(
         text: TextSpan(
           text: 'z',
           style: TextStyle(
-            color: const Color(0xFF00A3E0).withValues(alpha: 0.6 + breathProgress * 0.3),
+            color: const Color(0xFF00A3E0).withValues(alpha: 0.55 + breathProgress * 0.3),
             fontSize: 13,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
           ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, Offset(cx + 42, cy - 42 - breathProgress * 4));
+      textPainter.paint(canvas, Offset(cx + 44, cy - 42 - breathProgress * 4));
 
       final textPainterBig = TextPainter(
         text: TextSpan(
           text: 'Z',
           style: TextStyle(
-            color: const Color(0xFF00A3E0).withValues(alpha: 0.8),
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+            color: const Color(0xFF00A3E0).withValues(alpha: 0.85),
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
           ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainterBig.paint(canvas, Offset(cx + 52, cy - 56 - breathProgress * 5));
+      textPainterBig.paint(canvas, Offset(cx + 56, cy - 58 - breathProgress * 5));
     } else if (state == CatMascotState.error) {
-      // Draw blue sweat drop on right temple
-      final paintDrop = Paint()..color = const Color(0xFF00A3E0);
+      // 3D glossy blue sweat drop on right temple
+      final dropPaint = Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(-0.3, -0.4),
+          radius: 0.8,
+          colors: [
+            Color(0xFF67E8F9),
+            Color(0xFF0284C7),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset(cx + 48, cy - 20), radius: 8));
+
       final dropPath = Path();
-      const dropX = 46.0;
+      const dropX = 48.0;
       final dropY = cy - 24;
       dropPath.moveTo(cx + dropX, dropY);
-      dropPath.quadraticBezierTo(cx + dropX + 5, dropY + 6, cx + dropX + 4, dropY + 11);
-      dropPath.arcToPoint(Offset(cx + dropX - 4, dropY + 11), radius: const Radius.circular(4));
-      dropPath.quadraticBezierTo(cx + dropX - 5, dropY + 6, cx + dropX, dropY);
-      canvas.drawPath(dropPath, paintDrop);
+      dropPath.quadraticBezierTo(cx + dropX + 5.5, dropY + 7, cx + dropX + 4.5, dropY + 12);
+      dropPath.arcToPoint(Offset(cx + dropX - 4.5, dropY + 12), radius: const Radius.circular(4.5));
+      dropPath.quadraticBezierTo(cx + dropX - 5.5, dropY + 7, cx + dropX, dropY);
+      canvas.drawPath(dropPath, dropPaint);
+
+      // Highlight on drop
+      canvas.drawCircle(Offset(cx + dropX - 1.5, dropY + 8), 1.5, Paint()..color = Colors.white);
     } else if (state == CatMascotState.success) {
-      // Draw green leaves/confetti floating around
-      final leavesPaint = Paint()..color = const Color(0xFF10B981).withValues(alpha: 0.85);
+      // Festive leaves and golden confetti
+      final leavesPaint = Paint()..color = const Color(0xFF10B981).withValues(alpha: 0.88);
       final goldPaint = Paint()..color = const Color(0xFFFBBF24);
 
-      canvas.drawCircle(Offset(cx - 58, cy - 36), 4.5, leavesPaint);
-      canvas.drawCircle(Offset(cx + 62, cy - 30), 4.0, leavesPaint);
-      canvas.drawCircle(Offset(cx - 48, cy - 54), 3.0, goldPaint);
-      canvas.drawCircle(Offset(cx + 50, cy - 58), 3.5, goldPaint);
+      canvas.drawCircle(Offset(cx - 62, cy - 36), 5.0, leavesPaint);
+      canvas.drawCircle(Offset(cx + 64, cy - 30), 4.5, leavesPaint);
+      canvas.drawCircle(Offset(cx - 50, cy - 56), 3.5, goldPaint);
+      canvas.drawCircle(Offset(cx + 52, cy - 60), 4.0, goldPaint);
     }
   }
 
-  void _drawEars(Canvas canvas, double cx, double cy) {
-    // Left Ear (Dark Slate Grey patch side)
+  void _draw3DEars(Canvas canvas, double cx, double cy) {
+    // --- LEFT EAR (Slate Grey Patch side with 3D gradient) ---
     final leftEarPath = Path();
-    leftEarPath.moveTo(cx - 48, cy - 18);
-    leftEarPath.lineTo(cx - 58, cy - 56); // Tip of left ear
-    leftEarPath.quadraticBezierTo(cx - 28, cy - 48, cx - 18, cy - 36);
+    leftEarPath.moveTo(cx - 50, cy - 16);
+    leftEarPath.lineTo(cx - 62, cy - 58); // Tip of left ear
+    leftEarPath.quadraticBezierTo(cx - 30, cy - 50, cx - 18, cy - 36);
     leftEarPath.close();
 
-    final leftEarPaint = Paint()..color = const Color(0xFF475569);
+    final leftEarRect = leftEarPath.getBounds();
+    final leftEarPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF5D6F82), // Soft 3D highlight
+          Color(0xFF455566),
+          Color(0xFF334151), // Ambient shadow
+        ],
+      ).createShader(leftEarRect);
+
     canvas.drawPath(leftEarPath, leftEarPaint);
 
-    // Left Inner Ear (Muted pink)
+    // Left Inner Ear (Muted pink cavity)
     final leftInnerEar = Path();
-    leftInnerEar.moveTo(cx - 44, cy - 22);
-    leftInnerEar.lineTo(cx - 52, cy - 50);
-    leftInnerEar.quadraticBezierTo(cx - 30, cy - 44, cx - 24, cy - 34);
+    leftInnerEar.moveTo(cx - 46, cy - 20);
+    leftInnerEar.lineTo(cx - 55, cy - 52);
+    leftInnerEar.quadraticBezierTo(cx - 32, cy - 44, cx - 24, cy - 34);
     leftInnerEar.close();
-    canvas.drawPath(leftInnerEar, Paint()..color = const Color(0xFFD69BA6));
 
-    // Right Ear (Cream/White side)
-    final rightEarPath = Path();
-    rightEarPath.moveTo(cx + 48, cy - 18);
-    rightEarPath.lineTo(cx + 58, cy - 56); // Tip of right ear
-    rightEarPath.quadraticBezierTo(cx + 28, cy - 48, cx + 18, cy - 36);
-    rightEarPath.close();
-
-    final rightEarPaint = Paint()..color = const Color(0xFFFFFDF9);
-    canvas.drawPath(rightEarPath, rightEarPaint);
-
-    // Right Inner Ear (Cute pastel pink)
-    final rightInnerEar = Path();
-    rightInnerEar.moveTo(cx + 44, cy - 22);
-    rightInnerEar.lineTo(cx + 52, cy - 50);
-    rightInnerEar.quadraticBezierTo(cx + 30, cy - 44, cx + 24, cy - 34);
-    rightInnerEar.close();
-    canvas.drawPath(rightInnerEar, Paint()..color = const Color(0xFFFFAEBC));
-  }
-
-  void _drawHead(Canvas canvas, double cx, double cy) {
-    // Chubby, rounded cat head path
-    final headRect = RRect.fromRectAndCorners(
-      Rect.fromCenter(center: Offset(cx, cy), width: 114, height: 86),
-      topLeft: const Radius.circular(46),
-      topRight: const Radius.circular(46),
-      bottomLeft: const Radius.circular(42),
-      bottomRight: const Radius.circular(42),
+    canvas.drawPath(
+      leftInnerEar,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFE29DA7),
+            Color(0xFFC4818B),
+          ],
+        ).createShader(leftInnerEar.getBounds()),
     );
 
-    // Base fur: Soft cream/white
-    final baseHeadPaint = Paint()..color = const Color(0xFFFFFDF9);
+    // --- RIGHT EAR (Soft White/Cream side with 3D gradient) ---
+    final rightEarPath = Path();
+    rightEarPath.moveTo(cx + 50, cy - 16);
+    rightEarPath.lineTo(cx + 62, cy - 58); // Tip of right ear
+    rightEarPath.quadraticBezierTo(cx + 30, cy - 50, cx + 18, cy - 36);
+    rightEarPath.close();
+
+    final rightEarRect = rightEarPath.getBounds();
+    final rightEarPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
+        colors: [
+          Color(0xFFFFFFFF),
+          Color(0xFFF9F4EB),
+          Color(0xFFE8DFD3),
+        ],
+      ).createShader(rightEarRect);
+
+    canvas.drawPath(rightEarPath, rightEarPaint);
+
+    // Right Inner Ear (Cute pastel pink cavity)
+    final rightInnerEar = Path();
+    rightInnerEar.moveTo(cx + 46, cy - 20);
+    rightInnerEar.lineTo(cx + 55, cy - 52);
+    rightInnerEar.quadraticBezierTo(cx + 32, cy - 44, cx + 24, cy - 34);
+    rightInnerEar.close();
+
+    canvas.drawPath(
+      rightInnerEar,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(0.0, -0.2),
+          radius: 0.9,
+          colors: [
+            Color(0xFFFFC5CE),
+            Color(0xFFFF9EA9),
+          ],
+        ).createShader(rightInnerEar.getBounds()),
+    );
+  }
+
+  void _draw3DHead(Canvas canvas, double cx, double cy) {
+    // Chubby, rounded 3D cat head with pillowed cheeks
+    // When sleeping (headLiftProgress = 0), cheeks squish out slightly wider (122 vs 116)
+    final headWidth = 116.0 + (1.0 - headLiftProgress) * 6.0;
+    final headHeight = 88.0 - (1.0 - headLiftProgress) * 4.0;
+
+    final headRect = RRect.fromRectAndCorners(
+      Rect.fromCenter(center: Offset(cx, cy), width: headWidth, height: headHeight),
+      topLeft: const Radius.circular(48),
+      topRight: const Radius.circular(48),
+      bottomLeft: const Radius.circular(44),
+      bottomRight: const Radius.circular(44),
+    );
+
+    // Soft 3D drop shadow behind head
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.09)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
+    canvas.drawRRect(headRect.shift(const Offset(0, 4)), shadowPaint);
+
+    // Base fur: 3D Volumetric Radial Gradient (Key light from top-left)
+    final headGradientRect = headRect.outerRect;
+    final baseHeadPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(-0.25, -0.35),
+        radius: 1.15,
+        colors: [
+          Color(0xFFFFFFFF), // Direct specular diffuse highlight
+          Color(0xFFFFFDF8),
+          Color(0xFFF7F1E7),
+          Color(0xFFE9DECf), // Ambient occlusion shadow at base/chin
+        ],
+        stops: [0.0, 0.45, 0.82, 1.0],
+      ).createShader(headGradientRect);
+
     canvas.drawRRect(headRect, baseHeadPaint);
 
-    // Left Ear & Forehead Slate Grey Patch
+    // Left Ear & Forehead Slate Grey 3D Patch
     canvas.save();
     canvas.clipRRect(headRect);
 
     final patchPath = Path();
-    patchPath.moveTo(cx - 60, cy - 50);
-    patchPath.lineTo(cx - 5, cy - 50);
-    patchPath.quadraticBezierTo(cx - 6, cy - 12, cx - 34, cy + 2);
-    patchPath.quadraticBezierTo(cx - 58, cy - 6, cx - 60, cy - 15);
+    patchPath.moveTo(cx - 64, cy - 54);
+    patchPath.lineTo(cx - 4, cy - 54);
+    patchPath.quadraticBezierTo(cx - 5, cy - 10, cx - 34, cy + 4);
+    patchPath.quadraticBezierTo(cx - 62, cy - 4, cx - 64, cy - 14);
     patchPath.close();
 
-    final patchPaint = Paint()..color = const Color(0xFF475569);
+    final patchRect = patchPath.getBounds();
+    final patchPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF5D6F82), // Soft 3D highlight
+          Color(0xFF455566),
+          Color(0xFF334151), // Ambient shadow
+        ],
+      ).createShader(patchRect);
+
     canvas.drawPath(patchPath, patchPaint);
     canvas.restore();
-
-    // Subtle gentle outline for definition
-    final outlinePaint = Paint()
-      ..color = const Color(0xFFE2E8F0).withValues(alpha: 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    canvas.drawRRect(headRect, outlinePaint);
   }
 
   void _drawCheeks(Canvas canvas, double cx, double cy) {
+    // Soft airbrush pink blush with Gaussian blur
     final blushPaint = Paint()
-      ..color = const Color(0xFFFF9AA2).withValues(alpha: 0.42)
-      ..style = PaintingStyle.fill;
+      ..color = const Color(0xFFFF8DA1).withValues(alpha: 0.45)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
 
     // Left blush
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx - 36, cy + 14), width: 14, height: 8),
+      Rect.fromCenter(center: Offset(cx - 36, cy + 13), width: 16, height: 9),
       blushPaint,
     );
     // Right blush
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx + 36, cy + 14), width: 14, height: 8),
+      Rect.fromCenter(center: Offset(cx + 36, cy + 13), width: 16, height: 9),
       blushPaint,
     );
   }
 
-  void _drawEyes(Canvas canvas, double cx, double cy) {
+  void _draw3DEyes(Canvas canvas, double cx, double cy) {
     final eyeCenterY = cy - 2;
     const eyeDistX = 22.0;
-    const eyeWidth = 18.0;
-    const eyeHeight = 22.0;
+    const eyeWidth = 19.0;
+    const eyeHeight = 23.0;
 
     final leftEyeCenter = Offset(cx - eyeDistX, eyeCenterY);
     final rightEyeCenter = Offset(cx + eyeDistX, eyeCenterY);
@@ -391,8 +508,7 @@ class _CatMascotPainter extends CustomPainter {
     final bool isSuccess = state == CatMascotState.success;
     final bool isError = state == CatMascotState.error;
 
-    // Both eyes covered by paws?
-    // Left eye is covered if coverProgress > 0.6
+    // Left eye is covered if coverProgress > 0.65
     final bool leftEyeCovered = coverProgress > 0.65;
     // Right eye is covered if coverProgress > 0.65 UNLESS peeking!
     final bool rightEyeCovered = coverProgress > 0.65 && peekProgress < 0.45;
@@ -400,9 +516,9 @@ class _CatMascotPainter extends CustomPainter {
     // 1. LEFT EYE
     if (!leftEyeCovered) {
       if (isSleeping || isSuccess) {
-        _drawClosedEyeArc(canvas, leftEyeCenter, isHappy: isSuccess);
+        _draw3DClosedEye(canvas, leftEyeCenter, isHappy: isSuccess);
       } else {
-        _drawOpenEye(
+        _draw3DOpenEye(
           canvas,
           leftEyeCenter,
           eyeWidth,
@@ -417,11 +533,11 @@ class _CatMascotPainter extends CustomPainter {
     // 2. RIGHT EYE
     if (!rightEyeCovered) {
       if (isSleeping || (isSuccess && coverProgress < 0.5)) {
-        _drawClosedEyeArc(canvas, rightEyeCenter, isHappy: isSuccess);
+        _draw3DClosedEye(canvas, rightEyeCenter, isHappy: isSuccess);
       } else {
         // If peeking, right eye looks slightly downward & curious
         final effectiveLook = (coverProgress > 0.5 && peekProgress > 0.4) ? 0.35 : lookProgress;
-        _drawOpenEye(
+        _draw3DOpenEye(
           canvas,
           rightEyeCenter,
           eyeWidth,
@@ -434,7 +550,7 @@ class _CatMascotPainter extends CustomPainter {
     }
   }
 
-  void _drawOpenEye(
+  void _draw3DOpenEye(
     Canvas canvas,
     Offset center,
     double w,
@@ -446,53 +562,96 @@ class _CatMascotPainter extends CustomPainter {
     final scleraRect = Rect.fromCenter(center: center, width: w, height: h);
 
     canvas.save();
-    // Clip to eye shape
+    // Clip to rounded eye shape
     final scleraRRect = RRect.fromRectAndRadius(scleraRect, Radius.circular(w / 2));
     canvas.clipRRect(scleraRRect);
 
-    // Sclera background (clean white)
-    canvas.drawRRect(scleraRRect, Paint()..color = Colors.white);
+    // Sclera with subtle top ambient shadow
+    final scleraPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFFE2E8F0), // Subtle shadow under eyelid
+          Color(0xFFFFFFFF),
+          Color(0xFFFFFFFF),
+        ],
+        stops: [0.0, 0.35, 1.0],
+      ).createShader(scleraRect);
+    canvas.drawRRect(scleraRRect, scleraPaint);
 
     // Pupil movement calculations:
     // lookProgress goes 0.0 (left) to 1.0 (right)
-    // Horizontal travel: -4.5px to +4.5px
-    final pupilOffsetX = (look - 0.5) * 9.0;
-    // Vertical travel: looking slightly downward toward the keyboard (+2.5px)
-    final pupilOffsetY = isError ? -1.0 : 2.5;
-
+    final pupilOffsetX = (look - 0.5) * 9.5;
+    final pupilOffsetY = isError ? -1.0 : 2.2;
     final pupilCenter = Offset(center.dx + pupilOffsetX, center.dy + pupilOffsetY);
 
-    // Glossy Dark Iris/Pupil
-    final irisPaint = Paint()..color = const Color(0xFF1E293B);
-    final pupilRadius = isError ? 5.5 : 7.2;
+    // 3D Volumetric Glossy Iris / Pupil
+    final pupilRadius = isError ? 5.8 : 7.6;
+    final irisRect = Rect.fromCircle(center: pupilCenter, radius: pupilRadius);
+
+    final irisPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(-0.25, -0.35),
+        radius: 0.9,
+        colors: [
+          Color(0xFF2C3E50),
+          Color(0xFF182330),
+          Color(0xFF0B1017),
+        ],
+      ).createShader(irisRect);
     canvas.drawCircle(pupilCenter, pupilRadius, irisPaint);
 
-    // Primary Specular Glint (big white dot, top-left)
-    final glintPaint = Paint()..color = Colors.white;
+    // Corneal reflection arc at bottom of iris (giving luminous 3D anime look)
+    final reflectionArc = Path();
+    reflectionArc.addArc(
+      Rect.fromCircle(center: pupilCenter, radius: pupilRadius * 0.75),
+      0.6,
+      1.9,
+    );
+    canvas.drawPath(
+      reflectionArc,
+      Paint()
+        ..color = const Color(0xFF64748B).withValues(alpha: 0.45)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.3,
+    );
+
+    // Primary Specular Glint (big bright white reflection, top-left)
     canvas.drawCircle(
       Offset(pupilCenter.dx - pupilRadius * 0.36, pupilCenter.dy - pupilRadius * 0.38),
       pupilRadius * 0.38,
-      glintPaint,
+      Paint()..color = Colors.white,
     );
 
-    // Secondary Specular Glint (tiny white dot, bottom-right)
+    // Secondary Specular Glint (tiny white reflection, bottom-right)
     canvas.drawCircle(
       Offset(pupilCenter.dx + pupilRadius * 0.36, pupilCenter.dy + pupilRadius * 0.36),
       pupilRadius * 0.20,
-      glintPaint,
+      Paint()..color = Colors.white,
     );
 
     // Blink eyelid (covers top of eye during blink)
     if (blink > 0.05) {
-      final lidPaint = Paint()..color = const Color(0xFFFFFDF9);
       final lidHeight = h * blink;
+      final lidPaint = Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFFFFFF),
+            Color(0xFFF3ECE1),
+          ],
+        ).createShader(Rect.fromLTWH(scleraRect.left, scleraRect.top, scleraRect.width, lidHeight));
+
       canvas.drawRect(
         Rect.fromLTWH(scleraRect.left, scleraRect.top, scleraRect.width, lidHeight),
         lidPaint,
       );
-      // Eyelash line
+
+      // Eyelash contour
       final lashPaint = Paint()
-        ..color = const Color(0xFF475569)
+        ..color = const Color(0xFF334155)
         ..strokeWidth = 1.8
         ..style = PaintingStyle.stroke;
       canvas.drawLine(
@@ -503,22 +662,13 @@ class _CatMascotPainter extends CustomPainter {
     }
 
     canvas.restore();
-
-    // Eye outline
-    canvas.drawRRect(
-      scleraRRect,
-      Paint()
-        ..color = const Color(0xFF334155).withValues(alpha: 0.3)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
-    );
   }
 
-  void _drawClosedEyeArc(Canvas canvas, Offset center, {required bool isHappy}) {
+  void _draw3DClosedEye(Canvas canvas, Offset center, {required bool isHappy}) {
     final arcPaint = Paint()
       ..color = const Color(0xFF334155)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
+      ..strokeWidth = 2.4
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
@@ -527,42 +677,60 @@ class _CatMascotPainter extends CustomPainter {
       path.moveTo(center.dx - 9, center.dy + 3);
       path.quadraticBezierTo(center.dx, center.dy - 6, center.dx + 9, center.dy + 3);
     } else {
-      // Gentle sleeping eyes: ⌒ curve
-      path.moveTo(center.dx - 9, center.dy - 1);
-      path.quadraticBezierTo(center.dx, center.dy + 7, center.dx + 9, center.dy - 1);
+      // Cozy, blissful sleeping eyes: ⌒ curve with slight upward flick (manja)
+      path.moveTo(center.dx - 10, center.dy - 1);
+      path.quadraticBezierTo(center.dx, center.dy + 7.5, center.dx + 8, center.dy - 0.5);
+      path.quadraticBezierTo(center.dx + 10, center.dy - 2, center.dx + 11.5, center.dy - 3.5);
     }
     canvas.drawPath(path, arcPaint);
   }
 
   void _drawNoseAndMouth(Canvas canvas, double cx, double cy) {
-    // Nose (Soft pink triangle)
+    // 3D Button Nose (Coral pink with top highlight)
     final noseCenterY = cy + 9.5;
     final nosePath = Path();
-    nosePath.moveTo(cx - 3.5, noseCenterY - 2.0);
-    nosePath.lineTo(cx + 3.5, noseCenterY - 2.0);
-    nosePath.lineTo(cx, noseCenterY + 2.5);
+    nosePath.moveTo(cx - 3.8, noseCenterY - 2.2);
+    nosePath.lineTo(cx + 3.8, noseCenterY - 2.2);
+    nosePath.lineTo(cx, noseCenterY + 2.8);
     nosePath.close();
 
-    final nosePaint = Paint()..color = const Color(0xFFFF8DA1);
+    final nosePaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(0.0, -0.4),
+        radius: 0.8,
+        colors: [
+          Color(0xFFFF9EA9),
+          Color(0xFFFF6B81),
+        ],
+      ).createShader(Rect.fromCircle(center: Offset(cx, noseCenterY), radius: 4));
     canvas.drawPath(nosePath, nosePaint);
+
+    // Tiny specular dot on nose
+    canvas.drawCircle(Offset(cx - 0.8, noseCenterY - 1.2), 0.9, Paint()..color = Colors.white);
 
     // Mouth
     final mouthPaint = Paint()
       ..color = const Color(0xFF475569)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
+      ..strokeWidth = 1.7
       ..strokeCap = StrokeCap.round;
 
     if (state == CatMascotState.success) {
-      // Open joyful smile (D shape)
+      // Open joyful smile (D shape) with tongue
       final mouthPath = Path();
       mouthPath.moveTo(cx - 7, noseCenterY + 4);
       mouthPath.quadraticBezierTo(cx, noseCenterY + 14, cx + 7, noseCenterY + 4);
       mouthPath.close();
 
-      final openMouthPaint = Paint()..color = const Color(0xFFFF6B8B);
-      canvas.drawPath(mouthPath, openMouthPaint);
+      canvas.drawPath(mouthPath, Paint()..color = const Color(0xFFFF5277));
       canvas.drawPath(mouthPath, mouthPaint);
+
+      // Tongue
+      final tonguePath = Path();
+      tonguePath.moveTo(cx - 4, noseCenterY + 10);
+      tonguePath.quadraticBezierTo(cx, noseCenterY + 7, cx + 4, noseCenterY + 10);
+      tonguePath.quadraticBezierTo(cx, noseCenterY + 13.5, cx - 4, noseCenterY + 10);
+      canvas.drawPath(tonguePath, Paint()..color = const Color(0xFFFF8DA1));
     } else if (state == CatMascotState.error) {
       // Worried wavy mouth
       final mouthPath = Path();
@@ -573,30 +741,30 @@ class _CatMascotPainter extends CustomPainter {
     } else {
       // Classic cute 'w' cat mouth
       final mouthPath = Path();
-      // Left curve
       mouthPath.moveTo(cx - 7, noseCenterY + 5);
       mouthPath.quadraticBezierTo(cx - 3.5, noseCenterY + 8.5, cx, noseCenterY + 4.5);
-      // Right curve
       mouthPath.quadraticBezierTo(cx + 3.5, noseCenterY + 8.5, cx + 7, noseCenterY + 5);
       canvas.drawPath(mouthPath, mouthPaint);
     }
   }
 
-  void _drawPaws(Canvas canvas, double cx, double cy, double cardEdgeY) {
-    // Paw dimensions
-    const pawWidth = 32.0;
-    const pawHeight = 24.0;
+  void _draw3DPaws(Canvas canvas, double cx, double cy, double cardEdgeY) {
+    // 3D Paw dimensions (pillowy, rounded with 3 lobes)
+    const pawWidth = 36.0;
+    const pawHeight = 28.0;
 
-    // Resting positions (resting on card edge)
-    final restLeftPaw = Offset(cx - 36, cardEdgeY - pawHeight * 0.55);
-    final restRightPaw = Offset(cx + 36, cardEdgeY - pawHeight * 0.55);
+    // Natural resting posture:
+    // Paws sit directly ON TOP of the white card's upper rim (cardEdgeY),
+    // with the bottom lobes slightly overlapping over the card front!
+    final restLeftPaw = Offset(cx - 38, cardEdgeY - pawHeight * 0.42);
+    final restRightPaw = Offset(cx + 38, cardEdgeY - pawHeight * 0.42);
 
-    // Covered positions (covering eyes at cx ± 22, cy - 2)
+    // Eye covering posture
     final coverLeftPaw = Offset(cx - 22, cy - 2);
     final coverRightPaw = Offset(cx + 22, cy - 2);
 
-    // Peeking position for right paw (lowered by ~28px and tilted slightly right)
-    final peekRightPaw = Offset(cx + 38, cy + 24);
+    // Peeking posture for right paw (lowered by ~28px and tilted slightly right)
+    final peekRightPaw = Offset(cx + 38, cy + 26);
 
     // Happy celebrated positions (raised in air)
     final happyLeftPaw = Offset(cx - 52, cy - 32);
@@ -621,19 +789,20 @@ class _CatMascotPainter extends CustomPainter {
         peekProgress * 0.35 +
         happyProgress * 0.4;
 
-    // DRAW LEFT PAW
-    _drawSinglePaw(canvas, leftPos, pawWidth, pawHeight, angle: leftAngle);
+    // DRAW LEFT 3D PAW
+    _drawSingle3DPaw(canvas, leftPos, pawWidth, pawHeight, angle: leftAngle, isLeft: true);
 
-    // DRAW RIGHT PAW
-    _drawSinglePaw(canvas, rightPos, pawWidth, pawHeight, angle: rightAngle);
+    // DRAW RIGHT 3D PAW
+    _drawSingle3DPaw(canvas, rightPos, pawWidth, pawHeight, angle: rightAngle, isLeft: false);
   }
 
-  void _drawSinglePaw(
+  void _drawSingle3DPaw(
     Canvas canvas,
     Offset center,
     double width,
     double height, {
-    double angle = 0.0,
+    required double angle,
+    required bool isLeft,
   }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -641,51 +810,99 @@ class _CatMascotPainter extends CustomPainter {
       canvas.rotate(angle);
     }
 
-    final pawRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset.zero, width: width, height: height),
-      Radius.circular(height / 2),
+    // 1. Soft Ambient Cast Shadow onto the white card below the paw
+    final shadowPath = Path();
+    shadowPath.addOval(
+      Rect.fromCenter(center: const Offset(0, 8), width: width * 0.95, height: height * 0.55),
+    );
+    canvas.drawPath(
+      shadowPath,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.12)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0),
     );
 
-    // Soft drop shadow
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.08)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
-    canvas.drawRRect(pawRect.shift(const Offset(0, 2)), shadowPaint);
+    // 2. 3D Pillowy Paw Shape with 3 rounded toe lobes
+    // We construct a custom smooth path representing a chubby cat paw resting over an edge
+    final pawPath = Path();
+    final halfW = width / 2;
+    final halfH = height / 2;
 
-    // Paw fur (soft clean cream/white)
-    final pawPaint = Paint()..color = const Color(0xFFFFFDF9);
-    canvas.drawRRect(pawRect, pawPaint);
+    // Top wrist/arm curve
+    pawPath.moveTo(-halfW * 0.85, -halfH * 0.6);
+    pawPath.quadraticBezierTo(0, -halfH * 0.9, halfW * 0.85, -halfH * 0.6);
 
-    // Thin gentle outline
-    final outlinePaint = Paint()
-      ..color = const Color(0xFFE2E8F0)
+    // Right side down to right toe lobe
+    pawPath.quadraticBezierTo(halfW * 1.05, 0, halfW * 0.9, halfH * 0.6);
+    pawPath.quadraticBezierTo(halfW * 0.65, halfH * 1.05, halfW * 0.35, halfH * 0.9);
+
+    // Middle toe lobe
+    pawPath.quadraticBezierTo(0, halfH * 1.15, -halfW * 0.35, halfH * 0.9);
+
+    // Left toe lobe
+    pawPath.quadraticBezierTo(-halfW * 0.65, halfH * 1.05, -halfW * 0.9, halfH * 0.6);
+    pawPath.quadraticBezierTo(-halfW * 1.05, 0, -halfW * 0.85, -halfH * 0.6);
+    pawPath.close();
+
+    // 3. Volumetric 3D Gradient Fill
+    final pawBounds = pawPath.getBounds();
+    final pawPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(-0.2, -0.4),
+        radius: 1.0,
+        colors: [
+          Color(0xFFFFFFFF), // Specular light on top knuckle
+          Color(0xFFFFFDF9),
+          Color(0xFFF5EEE3),
+          Color(0xFFE2D6C5), // Ambient occlusion underneath toe cushions
+        ],
+        stops: [0.0, 0.45, 0.8, 1.0],
+      ).createShader(pawBounds);
+
+    canvas.drawPath(pawPath, pawPaint);
+
+    // 4. Subtle Toe Crease Lines (giving defined plump 3D finger lobes)
+    final creasePaint = Paint()
+      ..color = const Color(0xFFD6C8B5).withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    canvas.drawRRect(pawRect, outlinePaint);
+      ..strokeWidth = 1.3
+      ..strokeCap = StrokeCap.round;
 
-    // Cute pink paw pads / toe creases
-    final padPaint = Paint()..color = const Color(0xFFFFB8C2).withValues(alpha: 0.55);
-    // Center main pad
+    // Crease between left & middle lobe
+    canvas.drawLine(
+      Offset(-halfW * 0.32, halfH * 0.25),
+      Offset(-halfW * 0.35, halfH * 0.85),
+      creasePaint,
+    );
+    // Crease between middle & right lobe
+    canvas.drawLine(
+      Offset(halfW * 0.32, halfH * 0.25),
+      Offset(halfW * 0.35, halfH * 0.85),
+      creasePaint,
+    );
+
+    // 5. Cute soft pink toe pad glow
+    final padPaint = Paint()
+      ..color = const Color(0xFFFFB8C2).withValues(alpha: 0.45)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+
     canvas.drawOval(
       Rect.fromCenter(center: const Offset(0, 3), width: 10, height: 7),
       padPaint,
     );
-    // 3 toe pads
-    canvas.drawCircle(const Offset(-7, -3), 2.3, padPaint);
-    canvas.drawCircle(const Offset(0, -5), 2.5, padPaint);
-    canvas.drawCircle(const Offset(7, -3), 2.3, padPaint);
 
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _CatMascotPainter oldDelegate) {
+  bool shouldRepaint(covariant _CatMascot3DPainter oldDelegate) {
     return oldDelegate.state != state ||
         oldDelegate.lookProgress != lookProgress ||
         oldDelegate.coverProgress != coverProgress ||
         oldDelegate.peekProgress != peekProgress ||
         oldDelegate.happyProgress != happyProgress ||
         oldDelegate.blinkProgress != blinkProgress ||
-        oldDelegate.breathProgress != breathProgress;
+        oldDelegate.breathProgress != breathProgress ||
+        oldDelegate.headLiftProgress != headLiftProgress;
   }
 }

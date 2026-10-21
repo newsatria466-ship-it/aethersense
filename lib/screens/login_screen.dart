@@ -515,62 +515,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 20),
-
-                          // Divider "atau masuk dengan"
-                          Row(
-                            children: [
-                              const Expanded(child: Divider(color: borderColor)),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                child: Text(
-                                  'atau masuk dengan',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF94A3B8),
-                                  ),
-                                ),
-                              ),
-                              const Expanded(child: Divider(color: borderColor)),
-                            ],
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // Social Login Buttons (Google & Apple)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildSocialButton(
-                                  label: 'Google',
-                                  icon: const Icon(
-                                    Icons.g_mobiledata_rounded,
-                                    color: Color(0xFFEA4335),
-                                    size: 28,
-                                  ),
-                                  onTap: () {
-                                    _autoFillDemoAccount('user@gmail.com', 'pass1234');
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: _buildSocialButton(
-                                  label: 'Apple',
-                                  icon: const Icon(
-                                    Icons.apple_rounded,
-                                    color: darkNavy,
-                                    size: 20,
-                                  ),
-                                  onTap: () {
-                                    _autoFillDemoAccount('admin@tegal.go.id', 'admin123');
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
                           const SizedBox(height: 24),
 
                           // Footer "Belum punya akun? Daftar"
@@ -645,39 +589,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF475569),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    required String label,
-    required Widget icon,
-    required VoidCallback onTap,
-  }) {
-    return PressableScale(
-      onTap: onTap,
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE5EDF5)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            icon,
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0E2A47),
               ),
             ),
           ],

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.27",
-  "versionCode": 28,
-  "changelog": "• Halaman Login Baru dengan Maskot Kucing Interaktif: Desain modern minimalis (Frame 1 s/d 8) dilengkapi maskot kucing responsif.\n• Real-Time Text Tracking: Mata kucing membuka dan pupil bergerak mengikuti posisi kursor saat mengetik email.\n• Paws Eye Covering & One-Eye Peek: Kedua tangan kucing menutup mata saat input password tersembunyi, dan mengintip dengan 1 mata saat ikon visibility dinyalakan.\n• Sistem Autentikasi Dummy Modular: Dilengkapi AuthService persisten (SharedPreferences) dengan akun demo instan (user@gmail.com / pass1234) dan tombol Logout profil.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.27/app-release.apk"
+  "version": "1.0.28",
+  "versionCode": 29,
+  "changelog": "• Maskot Kucing 3D Lebih Alami & Manja: Desain kucing 3D volumetrik dengan shading halus, pipi tembam, dan pose tidur manja alami dengan dagu bersandar di antara kedua tangan.\n• Paws 3D Realistis di Atas Card: Tangan kucing kini memiliki 3 bantalan jari bulat menggemaskan yang bersandar dan menggantung alami di atas tepi kartu putih dengan bayangan jatuh (cast shadow).\n• Form Login Lebih Bersih: Menghapus opsi login pihak ketiga (Google & Apple) serta divider sehingga form lebih fokus, elegan, dan minimalis.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.28/app-release.apk"
 }

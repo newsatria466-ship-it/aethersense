@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/telemetry_controller.dart';
+import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/monitoring_history_modal.dart';
 import '../../widgets/pressable_scale.dart';
+import '../login_screen.dart';
 
 class HomeTab extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -68,6 +70,146 @@ class _HomeTabState extends State<HomeTab> {
     final dayName = days[now.weekday - 1];
     final monthName = months[now.month - 1];
     return '$dayName, ${now.day} $monthName ${now.year}';
+  }
+
+  void _showProfileModal(BuildContext context, bool isDark) {
+    final auth = AuthService.instance;
+    final email = auth.currentUserEmail ?? 'user@gmail.com';
+    final name = auth.currentUserName ?? 'Operator Smart City';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(
+            color: isDark ? AppColors.borderDark : AppColors.border,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // User Avatar & Info
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.cyan.withValues(alpha: 0.15),
+                border: Border.all(
+                  color: AppColors.cyan.withValues(alpha: 0.4),
+                  width: 2,
+                ),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.person_rounded,
+                  size: 36,
+                  color: AppColors.cyan,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Text(
+              name,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              email,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Operator Smart City Tegal',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.cyan,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            // Logout Button
+            PressableScale(
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                await AuthService.instance.logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFFCA5A5)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.logout_rounded,
+                      color: Color(0xFFEF4444),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Keluar dari Akun (Logout)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFEF4444),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
 
@@ -246,23 +388,26 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                           const SizedBox(width: 10),
 
-                          // Profile Avatar
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.cyan.withValues(alpha: 0.15),
-                              border: Border.all(
-                                color: AppColors.cyan.withValues(alpha: 0.4),
-                                width: 1.5,
+                          // Profile Avatar (Tappable to view Profile & Logout)
+                          PressableScale(
+                            onTap: () => _showProfileModal(context, isDark),
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.cyan.withValues(alpha: 0.15),
+                                border: Border.all(
+                                  color: AppColors.cyan.withValues(alpha: 0.4),
+                                  width: 1.5,
+                                ),
                               ),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.person_rounded,
-                                size: 22,
-                                color: AppColors.cyan,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.person_rounded,
+                                  size: 22,
+                                  color: AppColors.cyan,
+                                ),
                               ),
                             ),
                           ),

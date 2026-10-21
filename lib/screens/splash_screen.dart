@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import 'login_screen.dart';
 import 'main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -39,13 +41,14 @@ class _SplashScreenState extends State<SplashScreen>
 
     _animController.forward();
 
-    // Smooth transition into dashboard
+    // Smooth transition into login or dashboard depending on auth session
     Future.delayed(const Duration(milliseconds: 1100), () {
       if (mounted) {
+        final bool isAuth = AuthService.instance.isAuthenticated;
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const MainNavigationScreen(),
+                isAuth ? const MainNavigationScreen() : const LoginScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },

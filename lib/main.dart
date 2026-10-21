@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'controllers/telemetry_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'screens/splash_screen.dart';
+import 'services/auth_service.dart';
 import 'services/monitoring_history_service.dart';
 import 'services/update_service.dart';
 import 'theme/app_theme.dart';
@@ -11,6 +12,7 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MonitoringHistoryService.instance.init();
+  await AuthService.instance.init();
 
   runApp(const SmartCityTegalApp());
 }
@@ -25,6 +27,7 @@ class SmartCityTegalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeController()),
         ChangeNotifierProvider(create: (_) => TelemetryController()),
         ChangeNotifierProvider(create: (_) => UpdateService()),
+        ChangeNotifierProvider.value(value: AuthService.instance),
       ],
       child: Consumer<ThemeController>(
         builder: (context, themeController, _) {

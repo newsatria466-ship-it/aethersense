@@ -1,6 +1,6 @@
 {
-  "version": "1.0.26",
-  "versionCode": 27,
-  "changelog": "• Lineup Kendaraan Baru: Menggunakan 9 objek kendaraan unik kualitas tinggi (Mitsubishi L300, Porsche 919 Hybrid, Truk Box MBG, Nissan GT-R Nismo, Honda NSX-R, Jet Tempur Stealth, Red Bull Racing RB19 F1, Rolls-Royce Phantom V, dan VW Beetle Klasik).\n• Penyesuaian Arah & Heading Realistis: Arah hadap kendaraan otomatis disesuaikan secara natural (menghadap ke depan saat melaju di gerbang, berbelok mulus di lorong tengah, dan parkir menghadap depan ke dalam slot).\n• Detail Kendaraan Interaktif: Modal detail parkir kini menampilkan nama model kendaraan spesifik, plat nomor, dan preview orientasi tegak showroom.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.26/app-release.apk"
+  "version": "1.0.27",
+  "versionCode": 28,
+  "changelog": "• Halaman Login Baru dengan Maskot Kucing Interaktif: Desain modern minimalis (Frame 1 s/d 8) dilengkapi maskot kucing responsif.\n• Real-Time Text Tracking: Mata kucing membuka dan pupil bergerak mengikuti posisi kursor saat mengetik email.\n• Paws Eye Covering & One-Eye Peek: Kedua tangan kucing menutup mata saat input password tersembunyi, dan mengintip dengan 1 mata saat ikon visibility dinyalakan.\n• Sistem Autentikasi Dummy Modular: Dilengkapi AuthService persisten (SharedPreferences) dengan akun demo instan (user@gmail.com / pass1234) dan tombol Logout profil.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.27/app-release.apk"
 }

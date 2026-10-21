@@ -1,6 +1,6 @@
 {
-  "version": "1.0.28",
-  "versionCode": 29,
-  "changelog": "• Maskot Kucing 3D Lebih Alami & Manja: Desain kucing 3D volumetrik dengan shading halus, pipi tembam, dan pose tidur manja alami dengan dagu bersandar di antara kedua tangan.\n• Paws 3D Realistis di Atas Card: Tangan kucing kini memiliki 3 bantalan jari bulat menggemaskan yang bersandar dan menggantung alami di atas tepi kartu putih dengan bayangan jatuh (cast shadow).\n• Form Login Lebih Bersih: Menghapus opsi login pihak ketiga (Google & Apple) serta divider sehingga form lebih fokus, elegan, dan minimalis.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.28/app-release.apk"
+  "version": "1.0.29",
+  "versionCode": 30,
+  "changelog": "• Integrasi Fisik Kucing Bertumpu pada Card: Kucing kini benar-benar muncul dari balik kartu login (sebagai meja) dengan layering 3D fisik nyata, di mana card menutupi badan bawah dan bahu.\n• Proporsi Kepala & Wajah Lebih Besar (+40%): Wajah lebih besar, mata jernih berkilau dengan pantulan cahaya kornea untuk visual tracking kursor email yang presisi.\n• Paws 3D Menutup Mata & Mengintip (One-Eye Peek): Animasi tangan terangkat dari tepi kartu menutup kedua mata saat password tersembunyi, dan mengintip nakal lewat satu mata saat ikon mata ditekan.\n• Soft Contact Shadow & Clean Modern UI: Bayangan lembut di bawah kaki saat bertumpu pada kartu putih, navigasi mulus, dan form yang bersih tanpa tombol pihak ketiga.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.29/app-release.apk"
 }

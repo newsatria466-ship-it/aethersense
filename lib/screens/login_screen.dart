@@ -256,22 +256,14 @@ class _LoginScreenState extends State<LoginScreen> {
               physics: const ClampingScrollPhysics(),
               child: Column(
                 children: [
-                  // Top spacing to give room for sky
-                  const SizedBox(height: 38),
+                  // Top spacing so the cat head sits nicely under the sky
+                  const SizedBox(height: 18),
 
-                  // Interactive Cat Mascot perched right on top of the card
-                  Center(
-                    child: InteractiveCatMascot(
-                      state: _mascotState,
-                      lookProgress: _lookProgress,
-                      size: 140,
-                    ),
-                  ),
-
-                  // Small overlap so paws rest perfectly on card border
-                  Transform.translate(
-                    offset: const Offset(0, -6),
-                    child: Container(
+                  // Interactive 3D Cat Mascot layout with natural desk-resting integration
+                  InteractiveCatMascotCardLayout(
+                    state: _mascotState,
+                    lookProgress: _lookProgress,
+                    cardChild: Container(
                       width: double.infinity,
                       decoration: const BoxDecoration(
                         color: Colors.white,

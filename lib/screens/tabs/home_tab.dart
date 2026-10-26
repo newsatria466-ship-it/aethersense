@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0.0;
+  Timer? _timeTimer;
 
   Function(int) get onNavigateToTab => widget.onNavigateToTab;
 
@@ -30,10 +32,17 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Periodically refresh time-of-day hero image and greeting every 30 seconds
+    _timeTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   @override
   void dispose() {
+    _timeTimer?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -47,14 +56,41 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
+  /// Dynamic Alun-Alun image based on time of day:
+  /// - Pagi (05:00 - 10:59): alun_alun_pagi.png
+  /// - Siang (11:00 - 14:59): alun_alun_siang.png
+  /// - Sore (15:00 - 17:29): alun_alun_sore.png
+  /// - Sore menjelang malam / Senja / Maghrib (17:30 - 18:44): alun_alun_senja.png
+  /// - Malam (18:45 - 04:59): alun_alun_malam.jpeg
+  String _getTimeHeroImage() {
+    final now = DateTime.now();
+    final totalMinutes = now.hour * 60 + now.minute;
+
+    if (totalMinutes >= 5 * 60 && totalMinutes < 11 * 60) {
+      return 'assets/images/alun_alun_pagi.png';
+    } else if (totalMinutes >= 11 * 60 && totalMinutes < 15 * 60) {
+      return 'assets/images/alun_alun_siang.png';
+    } else if (totalMinutes >= 15 * 60 && totalMinutes < 17 * 60 + 30) {
+      return 'assets/images/alun_alun_sore.png';
+    } else if (totalMinutes >= 17 * 60 + 30 && totalMinutes < 18 * 60 + 45) {
+      return 'assets/images/alun_alun_senja.png';
+    } else {
+      return 'assets/images/alun_alun_malam.jpeg';
+    }
+  }
+
   String _getTimeGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour >= 4 && hour < 11) {
+    final now = DateTime.now();
+    final totalMinutes = now.hour * 60 + now.minute;
+
+    if (totalMinutes >= 4 * 60 && totalMinutes < 11 * 60) {
       return 'Selamat Pagi';
-    } else if (hour >= 11 && hour < 15) {
+    } else if (totalMinutes >= 11 * 60 && totalMinutes < 15 * 60) {
       return 'Selamat Siang';
-    } else if (hour >= 15 && hour < 18) {
+    } else if (totalMinutes >= 15 * 60 && totalMinutes < 17 * 60 + 30) {
       return 'Selamat Sore';
+    } else if (totalMinutes >= 17 * 60 + 30 && totalMinutes < 18 * 60 + 45) {
+      return 'Selamat Petang';
     } else {
       return 'Selamat Malam';
     }
@@ -418,10 +454,10 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
 
-              // 2. UNIFIED CURVED HERO CARD (No overlapping cuts, perfectly joined)
+              // 2. UNIFIED CURVED HERO CARD (Enlarged & Dynamic by Time of Day)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.surfaceDark : Colors.white,
@@ -440,9 +476,9 @@ class _HomeTabState extends State<HomeTab> {
                     clipBehavior: Clip.antiAlias,
                     child: Column(
                       children: [
-                        // Top Photo Area
+                        // Top Photo Area (Height increased to 200 for grander landmark view)
                         SizedBox(
-                          height: 155,
+                          height: 200,
                           width: double.infinity,
                           child: Stack(
                             fit: StackFit.expand,
@@ -455,7 +491,7 @@ class _HomeTabState extends State<HomeTab> {
                                       ? (1.18 + (_scrollOffset.abs() / 250))
                                       : 1.18,
                                   child: Image.asset(
-                                    'assets/images/hero-alun-alun.jpeg',
+                                    _getTimeHeroImage(),
                                     fit: BoxFit.cover,
                                     alignment: Alignment.center,
                                     errorBuilder: (_, __, ___) => Container(
@@ -465,7 +501,6 @@ class _HomeTabState extends State<HomeTab> {
                                 ),
                               ),
 
-
                               // Gradient Overlay
                               Container(
                                 decoration: BoxDecoration(
@@ -474,7 +509,7 @@ class _HomeTabState extends State<HomeTab> {
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Colors.black.withValues(alpha: 0.15),
-                                      Colors.black.withValues(alpha: 0.70),
+                                      Colors.black.withValues(alpha: 0.72),
                                     ],
                                   ),
                                 ),
@@ -482,7 +517,7 @@ class _HomeTabState extends State<HomeTab> {
 
                               // Texts & Weather Pill inside Photo
                               Padding(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(18),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -493,8 +528,8 @@ class _HomeTabState extends State<HomeTab> {
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 5,
+                                            horizontal: 12,
+                                            vertical: 6,
                                           ),
                                           decoration: BoxDecoration(
                                             color: Colors.white.withValues(alpha: 0.22),
@@ -538,17 +573,17 @@ class _HomeTabState extends State<HomeTab> {
                                         Text(
                                           '${_getTimeGreeting()}\nTegal',
                                           style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 21,
+                                            fontSize: 23,
                                             fontWeight: FontWeight.w800,
                                             color: Colors.white,
                                             height: 1.15,
                                           ),
                                         ),
-                                        const SizedBox(height: 3),
+                                        const SizedBox(height: 4),
                                         Text(
                                           _getCurrentDateFormatted(),
                                           style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.w500,
                                             color: Colors.white.withValues(alpha: 0.90),
                                           ),
@@ -566,7 +601,7 @@ class _HomeTabState extends State<HomeTab> {
                         PressableScale(
                           onTap: () => onNavigateToTab(1),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                             color: isDark ? AppColors.surfaceDark : Colors.white,
                             child: Row(
                               children: [

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.32",
-  "versionCode": 33,
-  "changelog": "• Animasi Zzz Layer Depan & Tipografi Lebih Besar: Partikel Zzz dan hembusan napas mendengkur dipindahkan ke lapisan paling depan (Foreground Layer 4) dengan ukuran huruf lebih besar (16–34px) sehingga mengambang jelas di atas kucing dan kartu tanpa tertutup apapun.\n• Card Login Melengkung Atas-Bawah & Posisi Nyaman: Kartu login kini mengambang elegan dengan sudut membulat di keempat sisi (BorderRadius 32px), margin samping, serta posisi kartu yang sedikit lebih rendah dan lega.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.32/app-release.apk"
+  "version": "1.0.33",
+  "versionCode": 34,
+  "changelog": "• Foto Dinamis Alun-Alun Sesuai Waktu: Banner Alun-Alun Kota Tegal kini berganti foto secara otomatis sesuai siklus waktu (Pagi, Siang, Sore, Sore Menjelang Malam/Senja, dan Malam).\n• Card Lebih Lega & Proporsional: Tinggi foto banner dan kartu diperbesar (+45px) dengan margin yang lebih optimal sehingga panorama Alun-Alun tampak jauh lebih memukau.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.33/app-release.apk"
 }

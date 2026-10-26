@@ -1,6 +1,6 @@
 {
-  "version": "1.0.31",
-  "versionCode": 32,
-  "changelog": "• Animasi Zzz Melayang Looping (Standby Sleep Mode): Saat mode standby/idle, terdapat animasi partikel Zzz bertingkat yang melayang lembut secara looping dari pipi kanan kucing ke angkasa, lengkap dengan hembusan napas mendengkur halus.\n• Pose Tidur Alami Sang Kucing: Dagu dan pipi tembam kucing bersandar nyaman memipih di tepi kartu putih, kelopak mata tidur terpejam damai dengan lipatan kelopak mata lembut.\n• Telapak Tangan 4 Jari Pillowy: Kedua telapak tangan kucing kini memiliki 4 bantalan jari bulat lembut yang bertumpu dan menggantung alami di atas kartu meja.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.31/app-release.apk"
+  "version": "1.0.32",
+  "versionCode": 33,
+  "changelog": "• Animasi Zzz Layer Depan & Tipografi Lebih Besar: Partikel Zzz dan hembusan napas mendengkur dipindahkan ke lapisan paling depan (Foreground Layer 4) dengan ukuran huruf lebih besar (16–34px) sehingga mengambang jelas di atas kucing dan kartu tanpa tertutup apapun.\n• Card Login Melengkung Atas-Bawah & Posisi Nyaman: Kartu login kini mengambang elegan dengan sudut membulat di keempat sisi (BorderRadius 32px), margin samping, serta posisi kartu yang sedikit lebih rendah dan lega.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.32/app-release.apk"
 }

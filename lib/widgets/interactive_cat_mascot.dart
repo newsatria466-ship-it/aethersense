@@ -210,7 +210,7 @@ class _InteractiveCatMascotCardLayoutState
               clipBehavior: Clip.none,
               children: [
                 // =============================================================
-                // LAYER 1 (BEHIND CARD): Torso, Shoulders, Head, Ears, Eyes, Zzz
+                // LAYER 1 (BEHIND CARD): Torso, Shoulders, Head, Ears, Eyes
                 // =============================================================
                 Positioned(
                   top: 0,
@@ -227,7 +227,6 @@ class _InteractiveCatMascotCardLayoutState
                       blinkProgress: _blinkAnimation.value,
                       breathProgress: _breathAnimController.value,
                       headLiftProgress: _headPoseAnimation.value,
-                      zzzProgress: _zzzAnimController.value,
                       cardRimY: cardRimY,
                     ),
                   ),
@@ -264,6 +263,28 @@ class _InteractiveCatMascotCardLayoutState
                     ),
                   ),
                 ),
+
+                // =============================================================
+                // LAYER 4 (TOP FOREGROUND): Floating Zzz Dream Stream & Effects
+                // Placed in front of EVERYTHING so it is NEVER hidden!
+                // =============================================================
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: mascotHeaderHeight + 90,
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _CatDecorationsForegroundPainter(
+                        state: widget.state,
+                        breathProgress: _breathAnimController.value,
+                        zzzProgress: _zzzAnimController.value,
+                        headLiftProgress: _headPoseAnimation.value,
+                        cardRimY: cardRimY,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             );
           },
@@ -286,7 +307,6 @@ class _CatHeadAndBodyPainter extends CustomPainter {
   final double blinkProgress;
   final double breathProgress;
   final double headLiftProgress;
-  final double zzzProgress;
   final double cardRimY;
 
   _CatHeadAndBodyPainter({
@@ -298,7 +318,6 @@ class _CatHeadAndBodyPainter extends CustomPainter {
     required this.blinkProgress,
     required this.breathProgress,
     required this.headLiftProgress,
-    required this.zzzProgress,
     required this.cardRimY,
   });
 
@@ -316,22 +335,19 @@ class _CatHeadAndBodyPainter extends CustomPainter {
     // 1. Torso & Shoulders rising from behind the card
     _drawTorsoAndShoulders(canvas, cx, cy, cardRimY);
 
-    // 2. Decorative Accents (Looping Sleep Zzz stream, Error sweat, Success confetti)
-    _drawDecorations(canvas, cx, cy);
-
-    // 3. 3D Volumetric Ears
+    // 2. 3D Volumetric Ears
     _draw3DEars(canvas, cx, cy);
 
-    // 4. Large 3D Chubby Head
+    // 3. Large 3D Chubby Head
     _draw3DHead(canvas, cx, cy);
 
-    // 5. Airbrushed Blushing Cheeks
+    // 4. Airbrushed Blushing Cheeks
     _drawCheeks(canvas, cx, cy);
 
-    // 6. 3D Glossy Anime Eyes & Pupils
+    // 5. 3D Glossy Anime Eyes & Pupils
     _draw3DEyes(canvas, cx, cy);
 
-    // 7. Button Nose & Expressive Cat Mouth
+    // 6. Button Nose & Expressive Cat Mouth
     _drawNoseAndMouth(canvas, cx, cy);
   }
 
@@ -359,129 +375,7 @@ class _CatHeadAndBodyPainter extends CustomPainter {
     canvas.drawPath(torsoPath, torsoPaint);
   }
 
-  void _drawDecorations(Canvas canvas, double cx, double cy) {
-    if (state == CatMascotState.idle) {
-      // 1. Soft breath puff arcs next to the right sleeping cheek
-      final puffPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.65 * (1.0 - breathProgress))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.2
-        ..strokeCap = StrokeCap.round;
 
-      final breathArc1 = Path();
-      breathArc1.addArc(
-        Rect.fromCircle(center: Offset(cx + 46, cy + 6), radius: 6.0 + breathProgress * 3.5),
-        -0.5,
-        1.1,
-      );
-      canvas.drawPath(breathArc1, puffPaint);
-
-      final breathArc2 = Path();
-      breathArc2.addArc(
-        Rect.fromCircle(center: Offset(cx + 46, cy + 6), radius: 11.0 + breathProgress * 4.5),
-        -0.5,
-        1.1,
-      );
-      canvas.drawPath(breathArc2, puffPaint);
-
-      // 2. Continuous looping Zzz dream stream: 4 staggered floating particles
-      // Drifting along a smooth curved Bézier trajectory up and to the right
-      const particleOffsets = [0.0, 0.25, 0.5, 0.75];
-
-      for (int i = 0; i < particleOffsets.length; i++) {
-        final double t = (zzzProgress + particleOffsets[i]) % 1.0;
-
-        // Quadratic Bézier curve: Start (near cheek) -> Control -> End (high in sky)
-        final startP = Offset(cx + 46, cy + 2);
-        final controlP = Offset(cx + 64, cy - 38);
-        final endP = Offset(cx + 86, cy - 86);
-
-        final double oneMinusT = 1.0 - t;
-        final double px = oneMinusT * oneMinusT * startP.dx +
-            2 * oneMinusT * t * controlP.dx +
-            t * t * endP.dx +
-            math.sin(t * math.pi * 3) * 2.2;
-        final double py = oneMinusT * oneMinusT * startP.dy +
-            2 * oneMinusT * t * controlP.dy +
-            t * t * endP.dy;
-
-        // Smooth Opacity envelope: Fades in during first 20%, stays solid, fades out in last 25%
-        double opacity = 1.0;
-        if (t < 0.20) {
-          opacity = t / 0.20;
-        } else if (t > 0.75) {
-          opacity = (1.0 - t) / 0.25;
-        }
-
-        // Particle size & font scaling (growing from 11px to 25px as it floats)
-        final double fontSize = 11.0 + t * 14.0;
-        final String text = t < 0.32 ? 'z' : 'Z';
-        final double rotation = -0.15 + t * 0.32 + math.sin(t * math.pi * 2) * 0.08;
-
-        canvas.save();
-        canvas.translate(px, py);
-        canvas.rotate(rotation);
-
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: text,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: opacity),
-              fontSize: fontSize,
-              fontWeight: FontWeight.w900,
-              shadows: [
-                Shadow(
-                  color: const Color(0xFF00A3E0).withValues(alpha: 0.55 * opacity),
-                  blurRadius: 7,
-                  offset: const Offset(0, 1.5),
-                ),
-                Shadow(
-                  color: const Color(0xFF0E2A47).withValues(alpha: 0.25 * opacity),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-
-        textPainter.paint(
-          canvas,
-          Offset(-textPainter.width / 2, -textPainter.height / 2),
-        );
-        canvas.restore();
-      }
-    } else if (state == CatMascotState.error) {
-      final dropPaint = Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(-0.3, -0.4),
-          radius: 0.8,
-          colors: [
-            Color(0xFF67E8F9),
-            Color(0xFF0284C7),
-          ],
-        ).createShader(Rect.fromCircle(center: Offset(cx + 64, cy - 25), radius: 10));
-
-      final dropPath = Path();
-      const dropX = 64.0;
-      final dropY = cy - 30;
-      dropPath.moveTo(cx + dropX, dropY);
-      dropPath.quadraticBezierTo(cx + dropX + 6.5, dropY + 8, cx + dropX + 5.5, dropY + 14);
-      dropPath.arcToPoint(Offset(cx + dropX - 5.5, dropY + 14), radius: const Radius.circular(5.5));
-      dropPath.quadraticBezierTo(cx + dropX - 6.5, dropY + 8, cx + dropX, dropY);
-      canvas.drawPath(dropPath, dropPaint);
-      canvas.drawCircle(Offset(cx + dropX - 2, dropY + 10), 1.8, Paint()..color = Colors.white);
-    } else if (state == CatMascotState.success) {
-      final leavesPaint = Paint()..color = const Color(0xFF10B981).withValues(alpha: 0.9);
-      final goldPaint = Paint()..color = const Color(0xFFFBBF24);
-
-      canvas.drawCircle(Offset(cx - 78, cy - 45), 5.5, leavesPaint);
-      canvas.drawCircle(Offset(cx + 80, cy - 40), 5.0, leavesPaint);
-      canvas.drawCircle(Offset(cx - 65, cy - 70), 4.0, goldPaint);
-      canvas.drawCircle(Offset(cx + 68, cy - 74), 4.5, goldPaint);
-    }
-  }
 
   void _draw3DEars(Canvas canvas, double cx, double cy) {
     // --- LEFT EAR (Slate Grey Patch side with 3D gradient) ---
@@ -935,7 +829,6 @@ class _CatHeadAndBodyPainter extends CustomPainter {
         oldDelegate.happyProgress != happyProgress ||
         oldDelegate.blinkProgress != blinkProgress ||
         oldDelegate.breathProgress != breathProgress ||
-        oldDelegate.zzzProgress != zzzProgress ||
         oldDelegate.headLiftProgress != headLiftProgress;
   }
 }
@@ -1193,6 +1086,164 @@ class _CatPawsForegroundPainter extends CustomPainter {
         oldDelegate.happyProgress != happyProgress ||
         oldDelegate.headLiftProgress != headLiftProgress ||
         oldDelegate.breathProgress != breathProgress;
+  }
+}
+
+/// ============================================================================
+/// LAYER 4 PAINTER: Top Foreground Decorations (Zzz Dream Stream, Breath Puffs)
+/// Rendered in front of EVERYTHING so it is NEVER hidden by the cat, paws, or card!
+/// ============================================================================
+class _CatDecorationsForegroundPainter extends CustomPainter {
+  final CatMascotState state;
+  final double breathProgress;
+  final double zzzProgress;
+  final double headLiftProgress;
+  final double cardRimY;
+
+  _CatDecorationsForegroundPainter({
+    required this.state,
+    required this.breathProgress,
+    required this.zzzProgress,
+    required this.headLiftProgress,
+    required this.cardRimY,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final sleepDip = (1.0 - headLiftProgress) * 10.0;
+    final breathOffset = state == CatMascotState.idle ? breathProgress * 2.0 : 0.0;
+    final cy = (cardRimY - 56.0) + sleepDip + breathOffset;
+
+    if (state == CatMascotState.idle) {
+      // 1. Soft breath snoring puff lines next to the sleeping right cheek
+      final puffPaint = Paint()
+        ..color = Colors.white.withValues(alpha: 0.75 * (1.0 - breathProgress))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round;
+
+      final breathArc1 = Path();
+      breathArc1.addArc(
+        Rect.fromCircle(center: Offset(cx + 48, cy + 8), radius: 6.5 + breathProgress * 3.5),
+        -0.5,
+        1.1,
+      );
+      canvas.drawPath(breathArc1, puffPaint);
+
+      final breathArc2 = Path();
+      breathArc2.addArc(
+        Rect.fromCircle(center: Offset(cx + 48, cy + 8), radius: 11.5 + breathProgress * 4.5),
+        -0.5,
+        1.1,
+      );
+      canvas.drawPath(breathArc2, puffPaint);
+
+      // 2. Extra Prominent, Continuous looping Zzz dream stream: 4 staggered floating particles
+      // Placed in the TOP FOREGROUND LAYER so it floats clearly over card, paws, and face!
+      const particleOffsets = [0.0, 0.25, 0.5, 0.75];
+
+      for (int i = 0; i < particleOffsets.length; i++) {
+        final double t = (zzzProgress + particleOffsets[i]) % 1.0;
+
+        // Quadratic Bézier curve: Start (right cheek) -> Control -> End (high in sky)
+        final startP = Offset(cx + 50, cy);
+        final controlP = Offset(cx + 76, cy - 42);
+        final endP = Offset(cx + 104, cy - 96);
+
+        final double oneMinusT = 1.0 - t;
+        final double px = oneMinusT * oneMinusT * startP.dx +
+            2 * oneMinusT * t * controlP.dx +
+            t * t * endP.dx +
+            math.sin(t * math.pi * 3) * 3.2;
+        final double py = oneMinusT * oneMinusT * startP.dy +
+            2 * oneMinusT * t * controlP.dy +
+            t * t * endP.dy;
+
+        // Smooth Opacity envelope: Fades in during first 18%, stays solid, fades out in last 22%
+        double opacity = 1.0;
+        if (t < 0.18) {
+          opacity = t / 0.18;
+        } else if (t > 0.78) {
+          opacity = (1.0 - t) / 0.22;
+        }
+
+        // Much larger, prominent font size: 16px -> 34px as it floats!
+        final double fontSize = 16.0 + t * 18.0;
+        final String text = t < 0.32 ? 'z' : 'Z';
+        final double rotation = -0.15 + t * 0.35 + math.sin(t * math.pi * 2) * 0.10;
+
+        canvas.save();
+        canvas.translate(px, py);
+        canvas.rotate(rotation);
+
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: text,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: opacity),
+              fontSize: fontSize,
+              fontWeight: FontWeight.w900,
+              shadows: [
+                Shadow(
+                  color: const Color(0xFF00A3E0).withValues(alpha: 0.75 * opacity),
+                  blurRadius: 9,
+                  offset: const Offset(0, 2),
+                ),
+                Shadow(
+                  color: const Color(0xFF0E2A47).withValues(alpha: 0.45 * opacity),
+                  blurRadius: 4,
+                  offset: const Offset(1, 1.5),
+                ),
+              ],
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+
+        textPainter.paint(
+          canvas,
+          Offset(-textPainter.width / 2, -textPainter.height / 2),
+        );
+        canvas.restore();
+      }
+    } else if (state == CatMascotState.error) {
+      final dropPaint = Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(-0.3, -0.4),
+          radius: 0.8,
+          colors: [
+            Color(0xFF67E8F9),
+            Color(0xFF0284C7),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset(cx + 64, cy - 25), radius: 10));
+
+      final dropPath = Path();
+      const dropX = 64.0;
+      final dropY = cy - 30;
+      dropPath.moveTo(cx + dropX, dropY);
+      dropPath.quadraticBezierTo(cx + dropX + 6.5, dropY + 8, cx + dropX + 5.5, dropY + 14);
+      dropPath.arcToPoint(Offset(cx + dropX - 5.5, dropY + 14), radius: const Radius.circular(5.5));
+      dropPath.quadraticBezierTo(cx + dropX - 6.5, dropY + 8, cx + dropX, dropY);
+      canvas.drawPath(dropPath, dropPaint);
+      canvas.drawCircle(Offset(cx + dropX - 2, dropY + 10), 1.8, Paint()..color = Colors.white);
+    } else if (state == CatMascotState.success) {
+      final leavesPaint = Paint()..color = const Color(0xFF10B981).withValues(alpha: 0.9);
+      final goldPaint = Paint()..color = const Color(0xFFFBBF24);
+
+      canvas.drawCircle(Offset(cx - 78, cy - 45), 5.5, leavesPaint);
+      canvas.drawCircle(Offset(cx + 80, cy - 40), 5.0, leavesPaint);
+      canvas.drawCircle(Offset(cx - 65, cy - 70), 4.0, goldPaint);
+      canvas.drawCircle(Offset(cx + 68, cy - 74), 4.5, goldPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CatDecorationsForegroundPainter oldDelegate) {
+    return oldDelegate.state != state ||
+        oldDelegate.breathProgress != breathProgress ||
+        oldDelegate.zzzProgress != zzzProgress ||
+        oldDelegate.headLiftProgress != headLiftProgress;
   }
 }
 

@@ -256,8 +256,8 @@ class _LoginScreenState extends State<LoginScreen> {
               physics: const ClampingScrollPhysics(),
               child: Column(
                 children: [
-                  // Top spacing so the cat head sits nicely under the sky
-                  const SizedBox(height: 18),
+                  // Top spacing so the cat head and card sit comfortably lower under the sky
+                  const SizedBox(height: 32),
 
                   // Interactive 3D Cat Mascot layout with natural desk-resting integration
                   InteractiveCatMascotCardLayout(
@@ -265,14 +265,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     lookProgress: _lookProgress,
                     cardChild: Container(
                       width: double.infinity,
-                      decoration: const BoxDecoration(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                        boxShadow: [
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: const [
                           BoxShadow(
-                            color: Color(0x0F0E2A47),
-                            blurRadius: 20,
-                            offset: Offset(0, -4),
+                            color: Color(0x140E2A47),
+                            blurRadius: 24,
+                            offset: Offset(0, 6),
                           ),
                         ],
                       ),
@@ -551,6 +552,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  // Bottom margin so rounded card corners float nicely
+                  const SizedBox(height: 28),
                 ],
               ),
             ),

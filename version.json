@@ -1,6 +1,6 @@
 {
-  "version": "1.0.33",
-  "versionCode": 34,
-  "changelog": "• Foto Dinamis Alun-Alun Sesuai Waktu: Banner Alun-Alun Kota Tegal kini berganti foto secara otomatis sesuai siklus waktu (Pagi, Siang, Sore, Sore Menjelang Malam/Senja, dan Malam).\n• Card Lebih Lega & Proporsional: Tinggi foto banner dan kartu diperbesar (+45px) dengan margin yang lebih optimal sehingga panorama Alun-Alun tampak jauh lebih memukau.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.33/app-release.apk"
+  "version": "1.0.34",
+  "versionCode": 35,
+  "changelog": "• Navigasi Tab Dual-Motion 60FPS: Perpindahan tab kini super ringan dan mulus tanpa drop frame.\n• Geser Layar Efek Slide Alami: Menjelajahi tab dengan gestur swipe kini menggunakan transisi geser horizontal yang responsif dan natural.\n• Indikator Notifikasi Update Baru: Lencana notifikasi pembaruan kini aktif di ikon lonceng beranda dan menu profil.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.34/app-release.apk"
 }

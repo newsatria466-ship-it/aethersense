@@ -27,10 +27,33 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final PageStorageBucket _bucket = PageStorageBucket();
   double _horizontalDragDistance = 0.0;
 
+  // Track navigation mode: false = Navbar tap (Motion Depth-Fade), true = Screen swipe (Efek Geser Biasa)
+  bool _isSwipeNavigation = false;
+  int _swipeDirection = 1; // 1 = swipe to next (right-to-left), -1 = swipe to prev (left-to-right)
+
+  // Pre-cache tab instances so they are not re-instantiated from scratch on each transition
+  late final List<Widget> _cachedTabs;
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+
+    _cachedTabs = [
+      HomeTab(
+        key: const PageStorageKey('home_tab'),
+        onNavigateToTab: _onTabTapped,
+      ),
+      const MonitoringTab(
+        key: PageStorageKey('monitoring_tab'),
+      ),
+      const ParkingTab(
+        key: PageStorageKey('parking_tab'),
+      ),
+      const LampTab(
+        key: PageStorageKey('lamp_tab'),
+      ),
+    ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUpdateSilently();
@@ -38,6 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   Future<void> _checkUpdateSilently() async {
+    await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
     try {
       final updateService = context.read<UpdateService>();
@@ -52,45 +76,28 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_currentIndex != index) {
       HapticFeedback.selectionClick();
       setState(() {
+        _isSwipeNavigation = false; // Navbar tap uses the signature Depth-Scale Motion
         _currentIndex = index;
       });
     }
   }
 
-  Widget _buildTabContent(int index) {
-    switch (index) {
-      case 0:
-        return KeyedSubtree(
-          key: const ValueKey<int>(0),
-          child: HomeTab(
-            key: const PageStorageKey('home_tab'),
-            onNavigateToTab: _onTabTapped,
-          ),
-        );
-      case 1:
-        return const KeyedSubtree(
-          key: ValueKey<int>(1),
-          child: MonitoringTab(
-            key: PageStorageKey('monitoring_tab'),
-          ),
-        );
-      case 2:
-        return const KeyedSubtree(
-          key: ValueKey<int>(2),
-          child: ParkingTab(
-            key: PageStorageKey('parking_tab'),
-          ),
-        );
-      case 3:
-        return const KeyedSubtree(
-          key: ValueKey<int>(3),
-          child: LampTab(
-            key: PageStorageKey('lamp_tab'),
-          ),
-        );
-      default:
-        return const SizedBox();
+  void _onSwipeTab(int targetIndex, int direction) {
+    if (_currentIndex != targetIndex && targetIndex >= 0 && targetIndex < 4) {
+      HapticFeedback.selectionClick();
+      setState(() {
+        _isSwipeNavigation = true; // Screen gesture uses the natural horizontal slide effect
+        _swipeDirection = direction;
+        _currentIndex = targetIndex;
+      });
     }
+  }
+
+  Widget _buildTabContent(int index) {
+    return KeyedSubtree(
+      key: ValueKey<int>(index),
+      child: _cachedTabs[index],
+    );
   }
 
   @override
@@ -114,25 +121,29 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               },
               onHorizontalDragEnd: (details) {
                 final velocity = details.primaryVelocity ?? 0.0;
-                const velocityThreshold = 220.0;
-                const distanceThreshold = 55.0;
+                const velocityThreshold = 180.0;
+                const distanceThreshold = 35.0;
 
-                // Geser ke kiri (swipe left) -> tab berikutnya
+                // Geser ke kiri (swipe left) -> tab berikutnya dengan efek geser horizontal
                 if (velocity < -velocityThreshold || _horizontalDragDistance < -distanceThreshold) {
                   if (_currentIndex < 3) {
-                    _onTabTapped(_currentIndex + 1);
+                    _onSwipeTab(_currentIndex + 1, 1);
                   }
                 }
-                // Geser ke kanan (swipe right) -> tab sebelumnya
+                // Geser ke kanan (swipe right) -> tab sebelumnya dengan efek geser horizontal
                 else if (velocity > velocityThreshold || _horizontalDragDistance > distanceThreshold) {
                   if (_currentIndex > 0) {
-                    _onTabTapped(_currentIndex - 1);
+                    _onSwipeTab(_currentIndex - 1, -1);
                   }
                 }
                 _horizontalDragDistance = 0.0;
               },
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 320),
+                duration: _isSwipeNavigation
+                    ? const Duration(milliseconds: 270)
+                    : const Duration(milliseconds: 240),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
                 layoutBuilder: (currentChild, previousChildren) {
                   return Stack(
                     fit: StackFit.expand,
@@ -145,15 +156,58 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 transitionBuilder: (child, animation) {
                   final isIncoming = (child.key as ValueKey<int>?)?.value == _currentIndex;
 
-                  // Smooth Fade-Through & Depth Scale across ALL tabs (Beranda, Monitoring, Parkir, PJU)
+                  // 1. JIKA DIGESER DENGAN LAYAR (SWIPE GESTURE) -> Efek Geser Biasa (Smooth Horizontal Slide)
+                  if (_isSwipeNavigation) {
+                    if (isIncoming) {
+                      final beginOffset = _swipeDirection > 0
+                          ? const Offset(1.0, 0.0)
+                          : const Offset(-1.0, 0.0);
+                      return SlideTransition(
+                        position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                        child: FadeTransition(
+                          opacity: CurvedAnimation(
+                            parent: animation,
+                            curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+                          ),
+                          child: child,
+                        ),
+                      );
+                    } else {
+                      final exitOffset = _swipeDirection > 0
+                          ? const Offset(-0.25, 0.0)
+                          : const Offset(0.25, 0.0);
+                      return SlideTransition(
+                        position: Tween<Offset>(begin: Offset.zero, end: exitOffset).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                        child: FadeTransition(
+                          opacity: CurvedAnimation(
+                            parent: animation,
+                            curve: const Interval(0.0, 0.45, curve: Curves.easeIn),
+                          ),
+                          child: child,
+                        ),
+                      );
+                    }
+                  }
+
+                  // 2. JIKA DITEKAN TOMBOL NAVBAR -> Motion Yang Sekarang (Depth Scale + Fade Buttery 60fps)
                   if (isIncoming) {
                     return FadeTransition(
                       opacity: CurvedAnimation(
                         parent: animation,
-                        curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+                        curve: const Interval(0.15, 1.0, curve: Curves.easeOut),
                       ),
                       child: ScaleTransition(
-                        scale: Tween<double>(begin: 0.94, end: 1.0).animate(
+                        scale: Tween<double>(begin: 0.96, end: 1.0).animate(
                           CurvedAnimation(
                             parent: animation,
                             curve: Curves.easeOutCubic,
@@ -166,10 +220,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     return FadeTransition(
                       opacity: CurvedAnimation(
                         parent: animation,
-                        curve: const Interval(0.0, 0.45, curve: Curves.easeIn),
+                        curve: const Interval(0.0, 0.40, curve: Curves.easeIn),
                       ),
                       child: ScaleTransition(
-                        scale: Tween<double>(begin: 1.0, end: 0.96).animate(
+                        scale: Tween<double>(begin: 1.0, end: 0.98).animate(
                           CurvedAnimation(
                             parent: animation,
                             curve: Curves.easeIn,

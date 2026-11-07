@@ -4,10 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/telemetry_controller.dart';
 import '../../services/auth_service.dart';
+import '../../services/update_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/monitoring_history_modal.dart';
 import '../../widgets/pressable_scale.dart';
 import '../login_screen.dart';
+import '../widgets/update_dialog.dart';
 
 class HomeTab extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -197,9 +199,129 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 12),
+
+            // App Version & Update Status
+            Consumer<UpdateService>(
+              builder: (context, updateService, _) {
+                final hasUpdate = updateService.updateInfo?.hasUpdate ?? false;
+                final latestVer = updateService.updateInfo?.latestVersion ?? updateService.currentVersion;
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: hasUpdate
+                        ? AppColors.cyan.withValues(alpha: isDark ? 0.16 : 0.08)
+                        : (isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF8FAFC)),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: hasUpdate
+                          ? AppColors.cyan.withValues(alpha: 0.5)
+                          : (isDark ? AppColors.borderDark : AppColors.border),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: (hasUpdate ? AppColors.cyan : AppColors.green).withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          hasUpdate ? Icons.system_update_rounded : Icons.check_circle_outline_rounded,
+                          color: hasUpdate ? AppColors.cyan : AppColors.green,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Versi ${updateService.currentVersion}',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                  ),
+                                ),
+                                if (hasUpdate) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.danger,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'UPDATE',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              hasUpdate
+                                  ? 'Tersedia pembaruan v$latestVer'
+                                  : 'Aplikasi sudah versi terbaru',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          if (hasUpdate && updateService.updateInfo != null) {
+                            Navigator.of(ctx).pop();
+                            UpdateDialog.show(context, updateService.updateInfo!);
+                          } else {
+                            final info = await updateService.checkForUpdate();
+                            if (ctx.mounted && info != null && info.hasUpdate) {
+                              Navigator.of(ctx).pop();
+                              UpdateDialog.show(context, info);
+                            }
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          backgroundColor: hasUpdate ? AppColors.cyan : Colors.transparent,
+                          foregroundColor: hasUpdate ? Colors.white : AppColors.cyan,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: hasUpdate ? BorderSide.none : const BorderSide(color: AppColors.cyan),
+                          ),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          hasUpdate ? 'Perbarui' : 'Cek Update',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
             // Logout Button
             PressableScale(
@@ -390,37 +512,95 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                           ),
 
-                          // Notification Bell
-                          PressableScale(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    isConnected
-                                        ? 'Perangkat IoT Smart City Tegal aktif dan terhubung.'
-                                        : 'Broker MQTT sedang mencoba rekoneksi otomatis.',
-                                    style: const TextStyle(fontSize: 12),
+                          // Notification Bell (With live update badge & trigger)
+                          Consumer<UpdateService>(
+                            builder: (context, updateService, _) {
+                              final hasUpdate = updateService.updateInfo?.hasUpdate ?? false;
+
+                              return PressableScale(
+                                onTap: () {
+                                  if (hasUpdate && updateService.updateInfo != null) {
+                                    UpdateDialog.show(context, updateService.updateInfo!);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          isConnected
+                                              ? 'Perangkat IoT aktif & terhubung. Versi aplikasi: v${updateService.currentVersion}'
+                                              : 'Broker MQTT sedang mencoba rekoneksi otomatis.',
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                        duration: const Duration(seconds: 3),
+                                        action: SnackBarAction(
+                                          label: 'Cek Update',
+                                          textColor: AppColors.cyan,
+                                          onPressed: () async {
+                                            final info = await updateService.checkForUpdate();
+                                            if (context.mounted) {
+                                              if (info != null && info.hasUpdate) {
+                                                UpdateDialog.show(context, info);
+                                              } else {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Aplikasi sudah versi terbaru!'),
+                                                    duration: Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? AppColors.surfaceDark : Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: hasUpdate
+                                          ? AppColors.danger
+                                          : (isDark ? AppColors.borderDark : AppColors.border),
+                                      width: hasUpdate ? 1.5 : 1.0,
+                                    ),
                                   ),
-                                  duration: const Duration(seconds: 2),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(
+                                        hasUpdate
+                                            ? Icons.system_update_rounded
+                                            : Icons.notifications_none_rounded,
+                                        size: 20,
+                                        color: hasUpdate
+                                            ? AppColors.danger
+                                            : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+                                      ),
+                                      if (hasUpdate)
+                                        Positioned(
+                                          right: 6,
+                                          top: 6,
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.danger,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: isDark ? AppColors.surfaceDark : Colors.white,
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
-                            child: Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: isDark ? AppColors.surfaceDark : Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isDark ? AppColors.borderDark : AppColors.border,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.notifications_none_rounded,
-                                size: 20,
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                              ),
-                            ),
                           ),
                           const SizedBox(width: 10),
 

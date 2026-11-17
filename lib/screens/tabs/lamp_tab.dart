@@ -349,99 +349,184 @@ class LampTab extends StatelessWidget {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-                // 4. Status Card (Sensor LDR vs Info Manual)
+                // 4. Status Card Dinamis: Sensor LDR (Matahari / Bulan) vs Info Manual
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.surfaceDark : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isAuto
-                              ? AppColors.green.withValues(alpha: 0.35)
-                              : (isDark ? AppColors.borderDark : AppColors.border),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: (isAuto ? AppColors.green : AppColors.cyan).withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              isAuto ? Icons.wb_sunny_outlined : Icons.tune_rounded,
-                              color: isAuto ? AppColors.green : AppColors.cyan,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isAuto ? 'Sensor Cahaya (LDR) Aktif' : 'Mode Manual Operator',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  isAuto
-                                      ? 'Lampu otomatis nyala saat petang/gelap & padam saat terang.'
-                                      : 'Penerangan dikendalikan secara manual lewat saklar zona di bawah.',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11,
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                    height: 1.25,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isAuto && controller.hasData)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.green.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
+                    child: Builder(
+                      builder: (context) {
+                        final isDarkCondition = controller.isDark ||
+                            ambientLight.toLowerCase().contains('gelap') ||
+                            (ldrRaw > 3000);
+
+                        // Dynamic colors based on Day (Terang) vs Night (Gelap) vs Manual
+                        final Color cardColor;
+                        final Color borderColor;
+                        final Color iconBg;
+                        final Color themeColor;
+                        final IconData primaryIcon;
+                        final String titleText;
+                        final String descText;
+
+                        if (!isAuto) {
+                          themeColor = AppColors.cyan;
+                          iconBg = AppColors.cyan.withValues(alpha: isDark ? 0.20 : 0.12);
+                          borderColor = isDark ? AppColors.borderDark : AppColors.border;
+                          cardColor = isDark ? AppColors.surfaceDark : Colors.white;
+                          primaryIcon = Icons.tune_rounded;
+                          titleText = 'Mode Manual Operator';
+                          descText = 'Otomasi sensor LDR dijeda — Penerangan PJU dikendalikan manual lewat saklar zona.';
+                        } else if (isDarkCondition) {
+                          // Suasana Malam / Gelap -> Icon Bulan & Nuansa Indigo Malam
+                          themeColor = const Color(0xFF818CF8);
+                          iconBg = const Color(0xFF6366F1).withValues(alpha: isDark ? 0.25 : 0.14);
+                          borderColor = const Color(0xFF6366F1).withValues(alpha: isDark ? 0.50 : 0.35);
+                          cardColor = isDark ? const Color(0xFF13192B) : const Color(0xFFF7F8FE);
+                          primaryIcon = Icons.nightlight_rounded;
+                          titleText = 'Sensor Cahaya (LDR) • Suasana Malam';
+                          descText = 'Cahaya sekitar gelap/malam — Seluruh lampu PJU otomatis menyala terang menerangi jalan.';
+                        } else {
+                          // Suasana Siang / Terang -> Icon Matahari & Nuansa Amber Golden
+                          themeColor = const Color(0xFFF59E0B);
+                          iconBg = const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.22 : 0.14);
+                          borderColor = const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.45 : 0.35);
+                          cardColor = isDark ? AppColors.surfaceDark : const Color(0xFFFFFDF5);
+                          primaryIcon = Icons.wb_sunny_rounded;
+                          titleText = 'Sensor Cahaya (LDR) • Suasana Siang';
+                          descText = 'Cahaya sekitar terang benderang — Lampu PJU otomatis padam untuk efisiensi energi listrik.';
+                        }
+
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOutCubic,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: borderColor, width: 1.2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: themeColor.withValues(alpha: isDark ? 0.08 : 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
                               ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    ambientLight,
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: iconBg,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: isAuto && isDarkCondition
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF6366F1).withValues(alpha: 0.30),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Icon(
+                                  primaryIcon,
+                                  color: themeColor,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      titleText,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      descText,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11,
+                                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                        height: 1.25,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (isAuto && controller.hasData)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: themeColor.withValues(alpha: isDark ? 0.20 : 0.12),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: themeColor.withValues(alpha: 0.35),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isDarkCondition ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+                                            size: 11,
+                                            color: themeColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isDarkCondition ? 'Malam • Gelap' : 'Siang • Terang',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                              color: themeColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 1),
+                                      Text(
+                                        'Raw ADC: $ldrRaw',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else if (!isAuto)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.cyan.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'MANUAL',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.green,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.cyan,
                                     ),
                                   ),
-                                  Text(
-                                    'ADC: $ldrRaw',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 8.5,
-                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

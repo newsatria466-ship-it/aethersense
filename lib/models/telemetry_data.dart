@@ -270,15 +270,54 @@ class TelemetryData {
       if (rl.length > 3) r4 = _parseBool(rl[3]);
     }
 
-    // Smart Parking Telemetry (9 Slots Kapasitas sesuai layout fisik)
-    final totalSlots = _parseInt(json['parking_total_slots'] ?? json['total_slots'], 9);
-    final occupiedSlots = _parseInt(json['parking_occupied_slots'] ?? json['occupied_slots'], 0);
-    final availSlots = _parseInt(json['parking_available_slots'] ?? json['available_slots'], totalSlots - occupiedSlots);
+    // Smart Parking Telemetry (9 Slots Kapasitas sesuai layout fisik & sensor hardware)
+    final totalSlots = _parseInt(
+      json['parking_total_slots'] ?? json['total_slots'] ?? json['kapasitas'] ?? json['total'],
+      9,
+    );
+    final occupiedSlots = _parseInt(
+      json['parking_occupied_slots'] ?? json['occupied_slots'] ?? json['terisi'] ?? json['slot_terisi'] ?? json['occupied'],
+      0,
+    );
+    final availSlots = _parseInt(
+      json['parking_available_slots'] ?? json['available_slots'] ?? json['slot_kosong'],
+      totalSlots - occupiedSlots,
+    );
     final parkFull = _parseBool(json['is_parking_full'] ?? (occupiedSlots >= totalSlots));
-    final entryGate = _parseBool(json['entry_gate_open']);
-    final exitGate = _parseBool(json['exit_gate_open']);
-    final irEntry = _parseBool(json['ir_entry_detected']);
-    final irExit = _parseBool(json['ir_exit_detected']);
+    final entryGate = _parseBool(
+      json['entry_gate_open'] ??
+      json['entry_gate'] ??
+      json['gate_entry'] ??
+      json['servo_entry'] ??
+      json['servo_masuk'] ??
+      json['servo1'] ??
+      json['palang_masuk'],
+    );
+    final exitGate = _parseBool(
+      json['exit_gate_open'] ??
+      json['exit_gate'] ??
+      json['gate_exit'] ??
+      json['servo_exit'] ??
+      json['servo_keluar'] ??
+      json['servo2'] ??
+      json['palang_keluar'],
+    );
+    final irEntry = _parseBool(
+      json['ir_entry_detected'] ??
+      json['ir_entry'] ??
+      json['ir_masuk'] ??
+      json['sensor_masuk'] ??
+      json['ir1'] ??
+      json['sensor_ir_masuk'],
+    );
+    final irExit = _parseBool(
+      json['ir_exit_detected'] ??
+      json['ir_exit'] ??
+      json['ir_keluar'] ??
+      json['sensor_keluar'] ??
+      json['ir2'] ??
+      json['sensor_ir_keluar'],
+    );
 
     return TelemetryData(
       deviceId: devId,

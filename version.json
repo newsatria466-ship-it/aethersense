@@ -1,6 +1,6 @@
 {
-  "version": "1.0.34",
-  "versionCode": 35,
-  "changelog": "• Navigasi Tab Dual-Motion 60FPS: Perpindahan tab kini super ringan dan mulus tanpa drop frame.\n• Geser Layar Efek Slide Alami: Menjelajahi tab dengan gestur swipe kini menggunakan transisi geser horizontal yang responsif dan natural.\n• Indikator Notifikasi Update Baru: Lencana notifikasi pembaruan kini aktif di ikon lonceng beranda dan menu profil.",
-  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.34/app-release.apk"
+  "version": "1.0.35",
+  "versionCode": 36,
+  "changelog": "• PJU Sensor LDR Dinamis: Card sensor LDR kini otomatis berganti icon bulan & warna nuansa malam saat gelap, serta icon matahari & warna emas saat siang.\n• Smart Parking 100% MQTT Hardware: Integrasi penuh telemetri sensor IR masuk/keluar, status servo palang, dan kontrol buka/tutup palang langsung ke alat ESP32.",
+  "apkUrl": "https://github.com/newsatria466-ship-it/aethersense/releases/download/v1.0.35/app-release.apk"
 }

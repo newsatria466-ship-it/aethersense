@@ -265,12 +265,8 @@ class _ParkingTabState extends State<ParkingTab> {
                               onSlotTap: (slot, isOccupied) {
                                 _showSlotDetailModal(context, slot, isOccupied, controller, isDark);
                               },
-                              onEntryGateTap: () {
-                                controller.toggleEntryGate();
-                              },
-                              onExitGateTap: () {
-                                controller.toggleExitGate();
-                              },
+                              onEntryGateTap: null,
+                              onExitGateTap: null,
                             ),
 
                             const SizedBox(height: 14),
@@ -283,7 +279,7 @@ class _ParkingTabState extends State<ParkingTab> {
                                 const SizedBox(width: 14),
                                 _buildLegendItem(AppColors.danger, 'Ada Mobil'),
                                 const SizedBox(width: 14),
-                                _buildLegendItem(AppColors.cyan, 'Palang Pintu (Sentuh)'),
+                                _buildLegendItem(AppColors.cyan, 'Palang Sensor IR'),
                               ],
                             ),
                           ],
@@ -340,25 +336,23 @@ class _ParkingTabState extends State<ParkingTab> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          // Gate Servo Controls (Entry & Exit)
+                          // Gate Servo Status Indicators (Pure Sensor IR Driven)
                           _buildGateCard(
                             title: 'Servo Palang Masuk (IN)',
                             subtitle: isEntryGateOpen
-                                ? 'Palang Terbuka (90°) • Kendaraan Lewat'
-                                : 'Palang Tertutup (0°) • Menunggu Sensor IR',
+                                ? 'Palang Terbuka (90°) • Mendeteksi Kendaraan Masuk'
+                                : 'Palang Tertutup (0°) • Siaga Menunggu Sensor IR',
                             isOpen: isEntryGateOpen,
                             isDark: isDark,
-                            onToggle: () => controller.toggleEntryGate(),
                           ),
                           const SizedBox(height: 10),
                           _buildGateCard(
                             title: 'Servo Palang Keluar (OUT)',
                             subtitle: isExitGateOpen
-                                ? 'Palang Terbuka (90°) • Kendaraan Lewat'
-                                : 'Palang Tertutup (0°) • Menunggu Sensor IR',
+                                ? 'Palang Terbuka (90°) • Mendeteksi Kendaraan Keluar'
+                                : 'Palang Tertutup (0°) • Siaga Menunggu Sensor IR',
                             isOpen: isExitGateOpen,
                             isDark: isDark,
-                            onToggle: () => controller.toggleExitGate(),
                           ),
                         ],
                       ),
@@ -487,12 +481,13 @@ class _ParkingTabState extends State<ParkingTab> {
                                     onTap: occupied <= 0
                                         ? null
                                         : () {
+                                            _visualizerKey.currentState?.animateCarExitingSlot(occupied);
                                             controller.simulateCarExit();
                                             ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
+                                              SnackBar(
                                                 backgroundColor: AppColors.danger,
-                                                content: Text('Trigger IR Keluar: Palang buka -> 1 Mobil keluar'),
-                                                duration: Duration(seconds: 2),
+                                                content: Text('Trigger IR Keluar: Palang buka -> Mobil di Slot P$occupied meluncur keluar lewat gerbang OUT'),
+                                                duration: const Duration(seconds: 2),
                                               ),
                                             );
                                           },
@@ -747,7 +742,6 @@ class _ParkingTabState extends State<ParkingTab> {
     required String subtitle,
     required bool isOpen,
     required bool isDark,
-    required VoidCallback onToggle,
   }) {
     final statusColor = isOpen ? AppColors.green : AppColors.textSecondary;
 
@@ -807,26 +801,37 @@ class _ParkingTabState extends State<ParkingTab> {
               ],
             ),
           ),
-          // Toggle Action
-          PressableScale(
-            onTap: onToggle,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: (isOpen ? AppColors.green : AppColors.cyan).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: (isOpen ? AppColors.green : AppColors.cyan).withValues(alpha: 0.3),
-                ),
+          // Live Gate Servo Sensor Status Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: (isOpen ? AppColors.green : AppColors.cyan).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: (isOpen ? AppColors.green : AppColors.cyan).withValues(alpha: 0.3),
               ),
-              child: Text(
-                isOpen ? 'Tutup Palang' : 'Buka Palang',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: isOpen ? AppColors.green : AppColors.cyan,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isOpen ? AppColors.green : AppColors.cyan,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 5),
+                Text(
+                  isOpen ? 'BUKA (90°)' : 'TUTUP (0°)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: isOpen ? AppColors.green : AppColors.cyan,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -995,6 +1000,7 @@ class _ParkingTabState extends State<ParkingTab> {
               PressableScale(
                 onTap: () {
                   Navigator.pop(ctx);
+                  _visualizerKey.currentState?.animateCarExitingSlot(slot.id);
                   controller.simulateCarExit();
                 },
                 child: Container(

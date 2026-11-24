@@ -331,24 +331,6 @@ void handleMqttMessage(char* topic, byte* payload, unsigned int length) {
         isParkingFull = false;
         Serial.println("[PARKING] Perintah RESET SLOT diterima. Kuota parkir kembali 10/10 kosong.");
     }
-    // Smart Parking Servo Manual Gate Control: {"type": "gate_control", "gate": "entry" | "exit", "state": true | false}
-    else if (strMsg.indexOf("\"gate_control\"") >= 0 || strMsg.indexOf("\"gate\"") >= 0) {
-        bool targetState = (strMsg.indexOf("\"state\":true") >= 0 ||
-                            strMsg.indexOf("\"state\": true") >= 0 ||
-                            strMsg.indexOf("\"state\":\"OPEN\"") >= 0 ||
-                            strMsg.indexOf("\"state\": \"OPEN\"") >= 0);
-        if (strMsg.indexOf("\"entry\"") >= 0 || strMsg.indexOf("\"masuk\"") >= 0) {
-            isEntryGateOpen = targetState;
-            servoEntry.write(targetState ? SERVO_OPEN_ANGLE : SERVO_CLOSED_ANGLE);
-            Serial.print("[PARKING] Palang Masuk dikontrol via MQTT -> ");
-            Serial.println(targetState ? "DIBUKA (90°)" : "DITUTUP (0°)");
-        } else if (strMsg.indexOf("\"exit\"") >= 0 || strMsg.indexOf("\"keluar\"") >= 0) {
-            isExitGateOpen = targetState;
-            servoExit.write(targetState ? SERVO_OPEN_ANGLE : SERVO_CLOSED_ANGLE);
-            Serial.print("[PARKING] Palang Keluar dikontrol via MQTT -> ");
-            Serial.println(targetState ? "DIBUKA (90°)" : "DITUTUP (0°)");
-        }
-    }
     // 0. Lighting Mode Control: {"type": "lighting_mode", "mode": "auto" | "manual"} or {"action": "set_mode", "mode": ...}
     else if (strMsg.indexOf("\"lighting_mode\"") >= 0 || strMsg.indexOf("\"mode\"") >= 0) {
         if (strMsg.indexOf("\"auto\"") >= 0 || strMsg.indexOf("\"AUTO\"") >= 0) {

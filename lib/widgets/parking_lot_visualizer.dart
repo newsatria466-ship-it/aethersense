@@ -179,6 +179,12 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
   int? _simulatedTargetSlot;
   bool _isDrivingCar = false;
 
+  // Exit animation controller for cars driving out of a slot through the OUT gate
+  late AnimationController _exitAnimController;
+  late Animation<double> _exitProgress;
+  int? _exitingSlot;
+  bool _isExitingCar = false;
+
   // Pulse animation for vacant/available indicator LEDs
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -216,6 +222,27 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
         }
       }
     });
+
+    _exitAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    );
+
+    _exitProgress = CurvedAnimation(
+      parent: _exitAnimController,
+      curve: Curves.easeInOutSine,
+    );
+
+    _exitAnimController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (mounted) {
+          setState(() {
+            _isExitingCar = false;
+            _exitingSlot = null;
+          });
+        }
+      }
+    });
   }
 
   @override
@@ -223,14 +250,23 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
     super.didUpdateWidget(oldWidget);
     // If occupied count increased from outside (e.g. real MQTT event or manual), trigger drive-in animation
     if (widget.occupiedSlots != null && oldWidget.occupiedSlots != null) {
-      final diff = widget.occupiedSlots!.difference(oldWidget.occupiedSlots!);
-      if (diff.isNotEmpty && !_isDrivingCar) {
-        animateCarEnteringSlot(diff.first);
+      final addedDiff = widget.occupiedSlots!.difference(oldWidget.occupiedSlots!);
+      final removedDiff = oldWidget.occupiedSlots!.difference(widget.occupiedSlots!);
+      if (addedDiff.isNotEmpty && !_isDrivingCar) {
+        animateCarEnteringSlot(addedDiff.first);
+      } else if (removedDiff.isNotEmpty && !_isExitingCar) {
+        animateCarExitingSlot(removedDiff.first);
       }
     } else if (widget.occupiedCount > oldWidget.occupiedCount && !_isDrivingCar) {
       final targetSlotId = widget.occupiedCount;
       if (targetSlotId <= slots.length) {
         animateCarEnteringSlot(targetSlotId);
+      }
+    } else if (widget.occupiedCount < oldWidget.occupiedCount && !_isExitingCar) {
+      // Car left the parking lot! Trigger realistic drive-out animation through OUT gate
+      final exitingSlotId = oldWidget.occupiedCount;
+      if (exitingSlotId >= 1 && exitingSlotId <= slots.length) {
+        animateCarExitingSlot(exitingSlotId);
       }
     }
   }
@@ -239,6 +275,7 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
   void dispose() {
     _pulseController.dispose();
     _driveAnimController.dispose();
+    _exitAnimController.dispose();
     super.dispose();
   }
 
@@ -250,6 +287,16 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
       _isDrivingCar = true;
     });
     _driveAnimController.forward(from: 0.0);
+  }
+
+  /// Trigger full car exit animation through OUT gate from a specific slot
+  void animateCarExitingSlot(int slotId) {
+    if (slotId < 1 || slotId > slots.length) return;
+    setState(() {
+      _exitingSlot = slotId;
+      _isExitingCar = true;
+    });
+    _exitAnimController.forward(from: 0.0);
   }
 
   /// Calculate position and heading along waypoint path
@@ -307,6 +354,49 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
     return {'x': x, 'y': y, 'angle': angle};
   }
 
+  /// Calculate position and heading along drive-out path through OUT gate
+  Map<String, double> _calculateExitPath(double t, ParkingSlotConfig target) {
+    // Stage 1: (0.00 to 0.25) -> Pull out of bay into center lane (y = 0.46) and turn East
+    // Stage 2: (0.25 to 0.65) -> Drive East along center lane toward OUT junction (x = 0.915)
+    // Stage 3: (0.65 to 0.82) -> Turn right toward OUT gate (x = 0.915, y = 0.70)
+    // Stage 4: (0.82 to 1.00) -> Drive through OUT barrier gate and leave the lot (y = 1.10)
+
+    double x = target.centerX;
+    double y = target.centerY;
+    double angle = target.isTopRow ? math.pi : 0.0;
+
+    if (t < 0.25) {
+      final segT = t / 0.25;
+      x = target.centerX;
+      if (target.isTopRow) {
+        y = target.centerY + segT * (0.46 - target.centerY);
+        final turnT = ((segT - 0.35) / 0.65).clamp(0.0, 1.0);
+        angle = math.pi + turnT * (math.pi / 2);
+      } else {
+        y = target.centerY - segT * (target.centerY - 0.46);
+        final turnT = ((segT - 0.35) / 0.65).clamp(0.0, 1.0);
+        angle = 0.0 - turnT * (math.pi / 2);
+      }
+    } else if (t < 0.65) {
+      final segT = (t - 0.25) / 0.40;
+      x = target.centerX + segT * (0.915 - target.centerX);
+      y = 0.46;
+      angle = -math.pi / 2; // Facing East along lane
+    } else if (t < 0.82) {
+      final segT = (t - 0.65) / 0.17;
+      x = 0.915;
+      y = 0.46 + segT * (0.70 - 0.46);
+      angle = -math.pi / 2 + segT * (math.pi / 2); // Smoothly turn from East (-pi/2) to South (0.0)
+    } else {
+      final segT = (t - 0.82) / 0.18;
+      x = 0.915;
+      y = 0.70 + segT * (1.10 - 0.70);
+      angle = 0.0; // Facing South through gate
+    }
+
+    return {'x': x, 'y': y, 'angle': angle};
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -356,7 +446,7 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
 
               // 4. OUT Barrier Gate (Animated Boom Barrier on OUT lane)
               _buildBarrierGate(
-                isOpen: widget.isExitGateOpen,
+                isOpen: widget.isExitGateOpen || _isExitingCar,
                 pivotX: 0.898 * width,
                 pivotY: 0.902 * height,
                 armLength: 0.076 * width,
@@ -415,6 +505,58 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
                     );
                   },
                 ),
+
+              // 6. Active Car Drive-out Animation (when simulated or MQTT vehicle exit occurs)
+              if (_isExitingCar && _exitingSlot != null)
+                AnimatedBuilder(
+                  animation: _exitProgress,
+                  builder: (context, child) {
+                    final target = slots.firstWhere((s) => s.id == _exitingSlot);
+                    final state = _calculateExitPath(_exitProgress.value, target);
+                    final carW = target.widthRatio * width * 0.72;
+                    final carH = target.heightRatio * height * 0.78;
+
+                    return Positioned(
+                      left: state['x']! * width - carW / 2,
+                      top: state['y']! * height - carH / 2,
+                      child: Transform.rotate(
+                        angle: state['angle']!,
+                        child: SizedBox(
+                          width: carW,
+                          height: carH,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Moving drop shadow
+                              Positioned(
+                                bottom: 2,
+                                child: Container(
+                                  width: carW * 0.85,
+                                  height: carH * 0.7,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Image.asset(
+                                target.carAsset,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.high,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         );
@@ -429,7 +571,8 @@ class ParkingLotVisualizerState extends State<ParkingLotVisualizer> with TickerP
         : slot.id <= widget.occupiedCount;
 
     final isOccupied = isBaseOccupied &&
-        !(_isDrivingCar && _simulatedTargetSlot == slot.id && _driveProgress.value < 0.95);
+        !(_isDrivingCar && _simulatedTargetSlot == slot.id && _driveProgress.value < 0.95) &&
+        !(_isExitingCar && _exitingSlot == slot.id);
 
     final slotLeft = slot.leftRatio * totalW;
     final slotTop = slot.topRatio * totalH;

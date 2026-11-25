@@ -99,46 +99,19 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Measure the cursor's exact horizontal position within the text field
+  /// Measure the cursor's horizontal position within the email text field
   void _updateCursorLookProgress() {
     final text = _emailController.text;
     final selection = _emailController.selection;
-    final int cursorOffset = selection.isValid && selection.baseOffset >= 0
+    final int rawOffset = selection.isValid && selection.baseOffset >= 0
         ? selection.baseOffset.clamp(0, text.length)
         : text.length;
+    final int cursorPos = (rawOffset == 0 && text.isNotEmpty) ? text.length : rawOffset;
 
-    double calculatedProgress = 0.5;
-
-    if (text.isEmpty || cursorOffset == 0) {
-      calculatedProgress = 0.15; // Looking towards the left start of field
-    } else {
-      try {
-        final textStyle = GoogleFonts.plusJakartaSans(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w500,
-        );
-
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: text.substring(0, cursorOffset),
-            style: textStyle,
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-
-        // Get RenderBox width or approximate available text box width (approx 240px)
-        double fieldWidth = 240.0;
-        final renderBox = _emailFieldKey.currentContext?.findRenderObject() as RenderBox?;
-        if (renderBox != null && renderBox.hasSize) {
-          fieldWidth = (renderBox.size.width - 90.0).clamp(100.0, 500.0);
-        }
-
-        // Normalize text width to 0.15 (left) ... 0.88 (right)
-        final double ratio = (textPainter.width / fieldWidth).clamp(0.0, 1.0);
-        calculatedProgress = 0.18 + ratio * 0.70;
-      } catch (_) {
-        calculatedProgress = 0.5;
-      }
+    double calculatedProgress = 0.15;
+    if (text.isNotEmpty && cursorPos > 0) {
+      final double charRatio = (cursorPos / 30.0).clamp(0.0, 1.0);
+      calculatedProgress = 0.15 + charRatio * 0.70;
     }
 
     if ((_lookProgress - calculatedProgress).abs() > 0.02) {
@@ -256,8 +229,72 @@ class _LoginScreenState extends State<LoginScreen> {
               physics: const ClampingScrollPhysics(),
               child: Column(
                 children: [
-                  // Top spacing so the cat head and card sit comfortably lower under the sky
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 18),
+
+                  // Smart City Tegal Header Logo (matching reference)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF0EAEEB),
+                              Color(0xFF22C55E),
+                            ],
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(18),
+                            bottomRight: Radius.circular(18),
+                            topRight: Radius.circular(6),
+                            bottomLeft: Radius.circular(6),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryBlue.withValues(alpha: 0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.eco_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Smart City',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: darkNavy,
+                              height: 1.05,
+                            ),
+                          ),
+                          Text(
+                            'Tegal',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: darkNavy,
+                              height: 1.05,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
 
                   // Interactive 3D Cat Mascot layout with natural desk-resting integration
                   InteractiveCatMascotCardLayout(
@@ -277,13 +314,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Title & Subtitle
+                          // Title & Subtitle (Centered symmetrically under cat mascot)
                           Text(
                             'Selamat datang!',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -294,6 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 6),
                           Text(
                             'Masuk untuk melanjutkan ke Smart City Tegal',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w500,
@@ -310,7 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFEF2F2),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: const Color(0xFFFCA5A5)),
                               ),
                               child: Row(
@@ -335,22 +374,36 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
 
-                          // 1. Email Field
-                          Container(
+                          // 1. Email Field (Modern pill-rounded with soft focus glow)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             key: _emailFieldKey,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFBFDFF),
-                              borderRadius: BorderRadius.circular(14),
+                              color: _emailFocusNode.hasFocus
+                                  ? Colors.white
+                                  : const Color(0xFFF3F7FA),
+                              borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: _emailFocusNode.hasFocus
                                     ? primaryBlue
                                     : borderColor,
-                                width: _emailFocusNode.hasFocus ? 1.6 : 1.0,
+                                width: _emailFocusNode.hasFocus ? 1.8 : 1.0,
                               ),
+                              boxShadow: _emailFocusNode.hasFocus
+                                  ? [
+                                      BoxShadow(
+                                        color: primaryBlue.withValues(alpha: 0.16),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
                             child: TextField(
                               controller: _emailController,
                               focusNode: _emailFocusNode,
+                              onChanged: (_) => _onEmailTextChanged(),
+                              onTap: _updateCursorLookProgress,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               style: GoogleFonts.plusJakartaSans(
@@ -374,8 +427,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
+                                  horizontal: 18,
+                                  vertical: 15,
                                 ),
                               ),
                             ),
@@ -383,17 +436,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           const SizedBox(height: 14),
 
-                          // 2. Password Field
-                          Container(
+                          // 2. Password Field (Modern pill-rounded with soft focus glow)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFBFDFF),
-                              borderRadius: BorderRadius.circular(14),
+                              color: _passwordFocusNode.hasFocus
+                                  ? Colors.white
+                                  : const Color(0xFFF3F7FA),
+                              borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: _passwordFocusNode.hasFocus
                                     ? primaryBlue
                                     : borderColor,
-                                width: _passwordFocusNode.hasFocus ? 1.6 : 1.0,
+                                width: _passwordFocusNode.hasFocus ? 1.8 : 1.0,
                               ),
+                              boxShadow: _passwordFocusNode.hasFocus
+                                  ? [
+                                      BoxShadow(
+                                        color: primaryBlue.withValues(alpha: 0.16),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
                             child: TextField(
                               controller: _passwordController,
@@ -434,8 +499,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
+                                  horizontal: 18,
+                                  vertical: 15,
                                 ),
                               ),
                             ),
@@ -443,20 +508,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           const SizedBox(height: 22),
 
-                          // 3. Login Action Button ("Masuk →")
+                          // 3. Login Action Button ("Masuk") Pill Gradient
                           PressableScale(
                             onTap: _isLoading ? null : _handleLogin,
                             child: Container(
                               width: double.infinity,
                               height: 52,
                               decoration: BoxDecoration(
-                                color: primaryBlue,
-                                borderRadius: BorderRadius.circular(14),
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color(0xFF0EAEEB),
+                                    Color(0xFF0095D6),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(28),
                                 boxShadow: [
                                   BoxShadow(
                                     color: primaryBlue.withValues(alpha: 0.35),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 4),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
                                   ),
                                 ],
                               ),
